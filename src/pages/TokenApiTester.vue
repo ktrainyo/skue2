@@ -1,152 +1,352 @@
 <template>
-    <div class="token-api-tester">
-      <h2>Token API Tester</h2>
-  
-      <!-- Token Input -->
-      <input
-        type="text"
-        v-model="tokenAddress"
-        placeholder="Enter token address"
-        class="token-input"
-      />
-  
-      <!-- Loop Time Interval -->
-      <div v-if="isLooping">
-        <label for="interval">Loop Interval (ms):</label>
-        <input
-          type="number"
-          v-model.number="loopInterval"
-          id="interval"
-          min="1000"
-          placeholder="Enter interval in milliseconds"
-        />
-      </div>
-  
-      <!-- API Call Buttons -->
-      <div class="button-group">
-        <button @click="handleApiCall('metadata')" :disabled="!tokenAddress">
-          Fetch Metadata
-        </button>
-        <button @click="handleApiCall('volume')" :disabled="!tokenAddress">
-          Fetch Volume
-        </button>
-        <button @click="handleApiCall('market')" :disabled="!tokenAddress">
-          Fetch Market
-        </button>
-        <button @click="handleApiCall('historical')" :disabled="!tokenAddress">
-          Fetch Historical
-        </button>
-      </div>
-  
-      <!-- Loop Toggle -->
-      <div class="loop-toggle">
-        <label>
-          <input
-            type="checkbox"
-            v-model="isLooping"
-          />
-          Enable Looping
+  <div class="container">
+    <h1>Token API Tester</h1>
+    <input
+      type="text"
+      v-model="tokenAddress"
+      placeholder="Enter token address"
+      class="token-input"
+      id="tokenAddress"
+      name="tokenAddress"
+    />
+    <div class="buttons-container">
+      <div class="api-buttons scrollable">
+        <label v-for="apiCall in apiCalls" :key="apiCall.name" class="api-button">
+          <input type="checkbox" v-model="selectedApiCalls" :value="apiCall.name" :id="apiCall.name" :name="apiCall.name" />
+          {{ apiCall.label }}
         </label>
       </div>
-  
-      <!-- Status Message -->
-      <p v-if="statusMessage">{{ statusMessage }}</p>
+      <div class="action-buttons">
+        <button @click="startApiCalls" :disabled="isLoading || !tokenAddress || !selectedApiCalls.length">
+          {{ isLoading ? 'Loading...' : 'Start API Calls' }}
+        </button>
+        <button @click="stopAllLoops" :disabled="!loops.length">
+          Stop All
+        </button>
+      </div>
     </div>
-  </template>
-  
-  <script lang="ts">
-  import { fetchAndInsertTokenHistorical } from '@/utils/callStaticTokensHistoricalService';
-import { fetchAndInsertTokenMarketData } from '@/utils/callStaticTokensMarketService';
-import { fetchAndInsertTokenMetadata } from '@/utils/callStaticTokensMetadataService';
-import { fetchAndInsertTokenVolume } from '@/utils/callStaticTokensVolumeService';
-import { ref, watch } from 'vue';
-  
-  export default {
-    setup() {
-      const tokenAddress = ref('');
-      const isLooping = ref(false);
-      const loopInterval = ref(5000); // Default loop interval: 5 seconds
-      const statusMessage = ref('');
-      let loopTimeout: ReturnType<typeof setTimeout> | null = null;
-  
-      // API Call Handlers
-      const handleApiCall = async (apiType: string) => {
-        if (isLooping.value) {
-          // If looping, repeatedly call the function
-          const loop = async () => {
-            await makeApiCall(apiType);
-            loopTimeout = setTimeout(loop, loopInterval.value);
-          };
-          loop();
+    <div class="loop-settings">
+      <label>
+        Loop Interval (ms):
+        <input type="number" v-model="loopInterval" id="loopInterval" name="loopInterval" />
+      </label>
+      <label>
+        <input type="checkbox" v-model="isLoopingEnabled" id="isLoopingEnabled" name="isLoopingEnabled" />
+        Enable Looping
+      </label>
+    </div>
+    <TokenTableList @tokenSelected="loadTokenOverview" />
+    <div class="overview-container">
+      <div>
+        <h3>Token Overview (Direct)</h3>
+        <TokenOverviewDirect v-if="mostRecentTokenData" :token="mostRecentTokenData.token" :tokenData="mostRecentTokenData" />
+      </div>
+    </div>
+    <div class="loops-table">
+      <h2>Active Loops</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>API Call</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="loop in loops" :key="loop.id">
+            <td>{{ loop.token }}</td>
+            <td>{{ loop.apiCall }}</td>
+            <td>{{ loop.isLooping ? 'Running' : 'Stopped' }}</td>
+            <td>
+              <button @click="toggleLoop(loop)">
+                {{ loop.isLooping ? 'Stop' : 'Start' }}
+              </button>
+              <button @click="removeLoop(loop.id)">Remove</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <MessageDisplay ref="messageDisplay" />
+  </div>
+</template>
+
+<script lang="ts">
+import MessageDisplay from '@/components/MessageDisplay.vue';
+import TokenOverviewDirect from '@/components/TokenOverviewDirect.vue';
+import TokenTableList from '@/components/TokenTableList.vue';
+import { getSupabaseClient } from '@/composables/useSupabase';
+import { fetchTokenPrice, fetchTokenPriceHistory } from '@/utils/priceService';
+import { runWithInterval } from '@/utils/taskRunner';
+import { fetchTokenAth, fetchTokenChartData, fetchTokenHolders, fetchTokenHoldersTop, fetchTokenInfo, fetchTokenPriceAtTimestamp } from '@/utils/tokenService';
+import { fetchTokenPoolOwnerTrades, fetchTokenPoolTrades, fetchTokenTrades } from '@/utils/tradeService';
+import { onMounted, ref, watch } from 'vue';
+
+const supabase = getSupabaseClient();
+
+export default {
+  components: {
+    TokenOverviewDirect,
+    MessageDisplay,
+    TokenTableList,
+  },
+  setup() {
+    const tokenAddress = ref('');
+    const selectedApiCalls = ref<string[]>([]);
+    const loopInterval = ref(5000);
+    const isLoading = ref(false);
+    const isLoopingEnabled = ref(false);
+    const statusMessage = ref('');
+    const loops = ref<any[]>([]);
+    const lastFetchedTokenData = ref(null);
+    const mostRecentTokenData = ref(null);
+    let loopIdCounter = 0;
+
+    const apiCalls = [
+      { name: 'fetchTokenInfo', label: 'Fetch Token Info', fn: fetchTokenInfo },
+      { name: 'fetchTokenHolders', label: 'Fetch Token Holders', fn: fetchTokenHolders },
+      { name: 'fetchTokenHoldersTop', label: 'Fetch Top Token Holders', fn: fetchTokenHoldersTop },
+      { name: 'fetchTokenAth', label: 'Fetch Token ATH', fn: fetchTokenAth },
+      { name: 'fetchTokenChartData', label: 'Fetch Token Chart Data', fn: fetchTokenChartData },
+      { name: 'fetchTokenPoolChartData', label: 'Fetch Token Pool Chart Data', fn: fetchTokenPoolChartData },
+      { name: 'fetchTokenPrice', label: 'Fetch Token Price', fn: fetchTokenPrice },
+      { name: 'fetchTokenPriceHistory', label: 'Fetch Token Price History', fn: fetchTokenPriceHistory },
+      { name: 'fetchTokenPriceAtTimestamp', label: 'Fetch Token Price at Timestamp', fn: fetchTokenPriceAtTimestamp },
+      { name: 'fetchTokenTrades', label: 'Fetch Token Trades', fn: fetchTokenTrades },
+      { name: 'fetchTokenPoolTrades', label: 'Fetch Token Pool Trades', fn: fetchTokenPoolTrades },
+      { name: 'fetchTokenPoolOwnerTrades', label: 'Fetch Token Pool Owner Trades', fn: fetchTokenPoolOwnerTrades },
+    ];
+
+    const fetchMostRecentTokenData = async (token: string | null = null) => {
+      try {
+        let query = supabase
+          .from('token_overview')
+          .select('*')
+          .order('timestamp', { ascending: false })
+          .limit(1);
+
+        if (token) {
+          query = query.eq('token', token);
+        }
+
+        const { data, error } = await query.single();
+
+        if (error) {
+          console.error('Error fetching most recent token data:', error.message);
+        } else if (!data) {
+          console.warn('No data found for token:', token);
+          mostRecentTokenData.value = null;
         } else {
-          // Single API call
-          await makeApiCall(apiType);
+          mostRecentTokenData.value = data;
+          tokenAddress.value = data.token;
         }
-      };
-  
-      const makeApiCall = async (apiType: string) => {
-        statusMessage.value = `Fetching ${apiType} data...`;
-  
-        try {
-          if (apiType === 'metadata') {
-            await fetchAndInsertTokenMetadata(tokenAddress.value.trim());
-          } else if (apiType === 'volume') {
-            await fetchAndInsertTokenVolume(tokenAddress.value.trim());
-          } else if (apiType === 'market') {
-            await fetchAndInsertTokenMarketData(tokenAddress.value.trim());
-          } else if (apiType === 'historical') {
-            await fetchAndInsertTokenHistorical(tokenAddress.value.trim());
+      } catch (error) {
+        console.error('Unexpected error fetching most recent token data:', error);
+      }
+    };
+
+    onMounted(() => {
+      fetchMostRecentTokenData();
+    });
+
+    const startApiCalls = () => {
+      isLoading.value = true;
+      statusMessage.value = 'Starting API calls...';
+      const messageDisplay = ref<MessageDisplay>();
+
+      const selectedFns = apiCalls
+        .filter(apiCall => selectedApiCalls.value.includes(apiCall.name))
+        .map(apiCall => ({ name: apiCall.name, fn: apiCall.fn }));
+
+      for (const apiCall of selectedFns) {
+        const loopId = loopIdCounter++;
+        const loop = {
+          id: loopId,
+          token: tokenAddress.value.trim(),
+          apiCall: apiCall.name,
+          isLooping: false,
+          stopLoop: null as (() => void) | null,
+        };
+
+        if (isLoopingEnabled.value) {
+          loop.stopLoop = runWithInterval(async () => {
+            await apiCall.fn(tokenAddress.value.trim()).catch(error => {
+              console.error(error);
+              messageDisplay.value?.logMessage(`Error: ${error.message}`, 'error');
+            });
+          }, loopInterval.value);
+          loop.isLooping = true;
+        } else {
+          (async () => {
+            try {
+              const data = await apiCall.fn(tokenAddress.value.trim());
+              lastFetchedTokenData.value = data;
+              isLoading.value = false;
+              statusMessage.value = 'API calls completed.';
+              messageDisplay.value?.logMessage('API calls completed.', 'info');
+            } catch (error) {
+              console.error(error);
+              messageDisplay.value?.logMessage(`Error: ${error.message}`, 'error');
+            }
+          })();
+        }
+
+        loops.value.push(loop);
+      }
+
+      isLoading.value = false;
+    };
+
+    const stopAllLoops = () => {
+      for (const loop of loops.value) {
+        if (loop.stopLoop) {
+          loop.stopLoop();
+          loop.isLooping = false;
+        }
+      }
+      statusMessage.value = 'All loops stopped.';
+      const messageDisplay = ref<MessageDisplay>();
+      messageDisplay.value?.logMessage('All loops stopped.', 'info');
+    };
+
+    const toggleLoop = (loop: any) => {
+      const messageDisplay = ref<MessageDisplay>();
+      if (loop.isLooping) {
+        loop.stopLoop?.();
+        loop.isLooping = false;
+        messageDisplay.value?.logMessage(`Loop for ${loop.apiCall} stopped.`, 'info');
+      } else {
+        loop.stopLoop = runWithInterval(async () => {
+          try {
+            await apiCalls.find(apiCall => apiCall.name === loop.apiCall)?.fn(loop.token);
+          } catch (error) {
+            console.error(error);
+            messageDisplay.value?.logMessage(`Error: ${error.message}`, 'error');
           }
-          statusMessage.value = `${apiType.charAt(0).toUpperCase() + apiType.slice(1)} data fetched successfully!`;
-        } catch (error) {
-          statusMessage.value = `Error fetching ${apiType} data: ${error.message}`;
-        }
-      };
-  
-      // Watch for changes to looping state to clear intervals
-      watch(isLooping, (newVal) => {
-        if (!newVal && loopTimeout) {
-          clearTimeout(loopTimeout);
-          loopTimeout = null;
-        }
-      });
-  
-      return {
-        tokenAddress,
-        isLooping,
-        loopInterval,
-        statusMessage,
-        handleApiCall,
-      };
-    },
-  };
-  </script>
-  
-  <style scoped>
-  .token-api-tester {
-    padding: 1rem;
-    margin: auto;
-    max-inline-size: 500px;
-  }
+        }, loopInterval.value);
+        loop.isLooping = true;
+        messageDisplay.value?.logMessage(`Loop for ${loop.apiCall} started.`, 'info');
+      }
+    };
 
-  .token-input {
-    padding: 0.5rem;
-    font-size: 1rem;
-    inline-size: 100%;
-    margin-block-end: 1rem;
-  }
+    const removeLoop = (loopId: number) => {
+      const loopIndex = loops.value.findIndex(loop => loop.id === loopId);
+      if (loopIndex !== -1) {
+        const loop = loops.value[loopIndex];
+        loop.stopLoop?.();
+        loops.value.splice(loopIndex, 1);
+        const messageDisplay = ref<MessageDisplay>();
+        messageDisplay.value?.logMessage(`Loop for ${loop.apiCall} removed.`, 'info');
+      }
+    };
 
-  .button-group {
-    display: flex;
-    justify-content: space-between;
-    margin-block-end: 1rem;
-  }
+    const loadTokenOverview = async (token: string) => {
+      await fetchMostRecentTokenData(token);
+    };
 
-  .loop-toggle {
-    margin-block-end: 1rem;
-  }
+    watch(tokenAddress, async () => {
+      try {
+        lastFetchedTokenData.value = null;
+        await fetchMostRecentTokenData(tokenAddress.value);
+      } catch (err) {
+        console.error('Error in watcher:', err);
+      }
+    });
 
-  .error {
-    color: red;
-  }
-  </style>
+    return {
+      tokenAddress,
+      selectedApiCalls,
+      loopInterval,
+      isLoading,
+      isLoopingEnabled,
+      statusMessage,
+      startApiCalls,
+      stopAllLoops,
+      toggleLoop,
+      removeLoop,
+      loops,
+      apiCalls,
+      lastFetchedTokenData,
+      mostRecentTokenData,
+      loadTokenOverview,
+    };
+  },
+};
+</script>
+
+<style scoped>
+.container {
+  padding: 1rem;
+  margin-block: 0;
+  margin-inline: auto;
+  max-inline-size: 800px;
+}
+
+.token-input {
+  display: block;
+  padding: 0.5rem;
+  font-size: 1rem;
+  inline-size: 100%;
+  margin-block-end: 1rem;
+  max-inline-size: 300px;
+}
+
+.buttons-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-block-end: 1rem;
+}
+
+.api-buttons {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-block-size: 200px;
+  overflow-y: auto;
+}
+
+.api-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.loop-settings {
+  margin-block-end: 1rem;
+}
+
+.overview-container {
+  display: flex;
+  gap: 2rem;
+  margin-block-start: 2rem;
+}
+
+.loops-table {
+  margin-block-start: 2rem;
+}
+
+table {
+  border-collapse: collapse;
+  inline-size: 100%;
+}
+
+th,
+td {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  text-align: start;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+</style>

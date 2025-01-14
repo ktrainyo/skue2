@@ -1,15 +1,34 @@
 // src/composables/useSupabase.ts
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
-let supabase: SupabaseClient
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export function useSupabase(): SupabaseClient {
-  if (!supabase) {
-    // Read from .env (must be prefixed with VITE_ in a Vite project)
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('supabaseUrl and supabaseKey are required.');
+}
 
-    supabase = createClient(supabaseUrl, supabaseAnonKey)
+let supabaseInstance;
+
+export const getSupabaseClient = () => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseKey);
   }
-  return supabase
+  return supabaseInstance;
+};
+
+export const supabase = getSupabaseClient();
+
+export async function fetchMostRecentTokenData() {
+  const { data, error } = await supabase
+    .from('token_overview')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
 }

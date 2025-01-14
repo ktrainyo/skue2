@@ -7,7 +7,8 @@
 </template>
 
 <script lang="ts">
-import { fetchAndInsertTokenHistorical } from '@/utils/callStaticTokensHistoricalService';
+import { fetchTokenHolders, fetchTokenInfo } from '@/utils/solanaTrackerService';
+import { runConcurrently } from '@/utils/taskRunner';
 
 export default {
   data() {
@@ -19,7 +20,10 @@ export default {
     async startFetching() {
       try {
         this.log = 'Fetching started...';
-        await fetchAndInsertTokenHistorical('exampleToken', 100, 0);
+        await runConcurrently([
+          () => fetchTokenInfo('exampleTokenAddress'),
+          () => fetchTokenHolders('exampleTokenAddress')
+        ]);
         this.log = 'Fetching completed.';
       } catch (error) {
         this.log = `Error: ${error.message}`;

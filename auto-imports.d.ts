@@ -54,13 +54,45 @@ declare global {
   const fetchAndInsertTokenMarketData: typeof import('./src/utils/callStaticTokensMarketService')['fetchAndInsertTokenMarketData']
   const fetchAndInsertTokenMetadata: typeof import('./src/utils/callStaticTokensMetadataService')['fetchAndInsertTokenMetadata']
   const fetchAndInsertTokenVolume: typeof import('./src/utils/callStaticTokensVolumeService')['fetchAndInsertTokenVolume']
+  const fetchFirstBuyers: typeof import('./src/utils/pnlService')['fetchFirstBuyers']
+  const fetchGraduatedTokens: typeof import('./src/utils/tokenListService')['fetchGraduatedTokens']
+  const fetchLatestTokens: typeof import('./src/utils/tokenListService')['fetchLatestTokens']
+  const fetchMostRecentTokenData: typeof import('./src/composables/useSupabase')['fetchMostRecentTokenData']
+  const fetchMultiTokens: typeof import('./src/utils/tokenListService')['fetchMultiTokens']
+  const fetchNotifications: typeof import('./src/utils/notificationService')['fetchNotifications']
   const fetchOrdersAndSave: typeof import('./src/utils/orderService')['fetchOrdersAndSave']
+  const fetchTokenAth: typeof import('./src/utils/tokenService')['fetchTokenAth']
+  const fetchTokenChartData: typeof import('./src/utils/tokenService')['fetchTokenChartData']
+  const fetchTokenHolders: typeof import('./src/utils/tokenService')['fetchTokenHolders']
+  const fetchTokenHoldersTop: typeof import('./src/utils/tokenService')['fetchTokenHoldersTop']
+  const fetchTokenInfo: typeof import('./src/utils/tokenService')['fetchTokenInfo']
+  const fetchTokenPoolChartData: typeof import('./src/utils/chartService')['fetchTokenPoolChartData']
+  const fetchTokenPoolOwnerTrades: typeof import('./src/utils/tradeService')['fetchTokenPoolOwnerTrades']
+  const fetchTokenPoolStats: typeof import('./src/utils/solanaTrackerService.ts.bkup')['fetchTokenPoolStats']
+  const fetchTokenPoolTrades: typeof import('./src/utils/tradeService')['fetchTokenPoolTrades']
+  const fetchTokenPrice: typeof import('./src/utils/priceService')['fetchTokenPrice']
+  const fetchTokenPriceAtTimestamp: typeof import('./src/utils/tokenService')['fetchTokenPriceAtTimestamp']
+  const fetchTokenPriceHistory: typeof import('./src/utils/priceService')['fetchTokenPriceHistory']
+  const fetchTokenStats: typeof import('./src/utils/solanaTrackerService.ts.bkup')['fetchTokenStats']
+  const fetchTokenTrades: typeof import('./src/utils/tradeService')['fetchTokenTrades']
+  const fetchTokenWalletTrades: typeof import('./src/utils/solanaTrackerService.ts.bkup')['fetchTokenWalletTrades']
+  const fetchTokensByVolume: typeof import('./src/utils/tokenListService')['fetchTokensByVolume']
+  const fetchTopTokenTraders: typeof import('./src/utils/topTradersService')['fetchTopTokenTraders']
+  const fetchTopTraders: typeof import('./src/utils/topTradersService')['fetchTopTraders']
+  const fetchTrendingTokens: typeof import('./src/utils/tokenListService')['fetchTrendingTokens']
+  const fetchUserActivities: typeof import('./src/utils/userActivityService')['fetchUserActivities']
   const fetchUsersAndSave: typeof import('./src/utils/userService')['fetchUsersAndSave']
+  const fetchWalletBasicTokens: typeof import('./src/utils/walletService')['fetchWalletBasicTokens']
+  const fetchWalletPnL: typeof import('./src/utils/pnlService')['fetchWalletPnL']
+  const fetchWalletTokenPnL: typeof import('./src/utils/pnlService')['fetchWalletTokenPnL']
+  const fetchWalletTokens: typeof import('./src/utils/walletService')['fetchWalletTokens']
+  const fetchWalletTrades: typeof import('./src/utils/walletService')['fetchWalletTrades']
   const formatDate: typeof import('./src/@core/utils/formatters')['formatDate']
   const formatDateToMonthShort: typeof import('./src/@core/utils/formatters')['formatDateToMonthShort']
   const getActivePinia: typeof import('pinia')['getActivePinia']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
+  const getSupabaseClient: typeof import('./src/composables/useSupabase')['getSupabaseClient']
   const h: typeof import('vue')['h']
   const hexToRgb: typeof import('./src/@core/utils/colorConverter')['hexToRgb']
   const ignorableWatch: typeof import('@vueuse/core')['ignorableWatch']
@@ -89,6 +121,7 @@ declare global {
   const mapState: typeof import('pinia')['mapState']
   const mapStores: typeof import('pinia')['mapStores']
   const mapWritableState: typeof import('pinia')['mapWritableState']
+  const markNotificationAsRead: typeof import('./src/utils/notificationService')['markNotificationAsRead']
   const markRaw: typeof import('vue')['markRaw']
   const nextTick: typeof import('vue')['nextTick']
   const onActivated: typeof import('vue')['onActivated']
@@ -141,12 +174,14 @@ declare global {
   const rgbaToHex: typeof import('./src/@core/utils/colorConverter')['rgbaToHex']
   const runConcurrently: typeof import('./src/utils/taskRunner')['runConcurrently']
   const runWithInterval: typeof import('./src/utils/taskRunner')['runWithInterval']
+  const searchTokens: typeof import('./src/utils/searchService')['searchTokens']
   const setActivePinia: typeof import('pinia')['setActivePinia']
   const setMapStoreSuffix: typeof import('pinia')['setMapStoreSuffix']
   const shallowReactive: typeof import('vue')['shallowReactive']
   const shallowReadonly: typeof import('vue')['shallowReadonly']
   const shallowRef: typeof import('vue')['shallowRef']
   const storeToRefs: typeof import('pinia')['storeToRefs']
+  const supabase: typeof import('./src/composables/useSupabase')['supabase']
   const syncRef: typeof import('@vueuse/core')['syncRef']
   const syncRefs: typeof import('@vueuse/core')['syncRefs']
   const templateRef: typeof import('@vueuse/core')['templateRef']
@@ -294,6 +329,8 @@ declare global {
   const usePrevious: typeof import('@vueuse/core')['usePrevious']
   const useProjection: typeof import('@vueuse/math')['useProjection']
   const useRafFn: typeof import('@vueuse/core')['useRafFn']
+  const useRealtimeData: typeof import('./src/composables/useRealtimeData')['useRealtimeData']
+  const useRealtimeTokenData: typeof import('./src/composables/useRealtimeTokenData')['useRealtimeTokenData']
   const useRefHistory: typeof import('@vueuse/core')['useRefHistory']
   const useResizeObserver: typeof import('@vueuse/core')['useResizeObserver']
   const useResponsiveLeftSidebar: typeof import('./src/@core/composable/useResponsiveSidebar')['useResponsiveLeftSidebar']
@@ -429,14 +466,43 @@ declare module 'vue' {
     readonly fetchAndInsertTokenHistorical: UnwrapRef<typeof import('./src/utils/callStaticTokensHistoricalService')['fetchAndInsertTokenHistorical']>
     readonly fetchAndInsertTokenMarketData: UnwrapRef<typeof import('./src/utils/callStaticTokensMarketService')['fetchAndInsertTokenMarketData']>
     readonly fetchAndInsertTokenMetadata: UnwrapRef<typeof import('./src/utils/callStaticTokensMetadataService')['fetchAndInsertTokenMetadata']>
-    readonly fetchAndInsertTokenVolume: UnwrapRef<typeof import('./src/utils/callStaticTokensVolumeService')['fetchAndInsertTokenVolume']>
+    readonly fetchFirstBuyers: UnwrapRef<typeof import('./src/utils/pnlService')['fetchFirstBuyers']>
+    readonly fetchGraduatedTokens: UnwrapRef<typeof import('./src/utils/tokenListService')['fetchGraduatedTokens']>
+    readonly fetchLatestTokens: UnwrapRef<typeof import('./src/utils/tokenListService')['fetchLatestTokens']>
+    readonly fetchMostRecentTokenData: UnwrapRef<typeof import('./src/composables/useSupabase')['fetchMostRecentTokenData']>
+    readonly fetchMultiTokens: UnwrapRef<typeof import('./src/utils/tokenListService')['fetchMultiTokens']>
+    readonly fetchNotifications: UnwrapRef<typeof import('./src/utils/notificationService')['fetchNotifications']>
     readonly fetchOrdersAndSave: UnwrapRef<typeof import('./src/utils/orderService')['fetchOrdersAndSave']>
+    readonly fetchTokenAth: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenAth']>
+    readonly fetchTokenChartData: UnwrapRef<typeof import('./src/utils/chartService')['fetchTokenChartData']>
+    readonly fetchTokenChartData: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenChartData']>
+    readonly fetchTokenHolders: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenHolders']>
+    readonly fetchTokenHoldersTop: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenHoldersTop']>
+    readonly fetchTokenInfo: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenInfo']>
+    readonly fetchTokenPoolChartData: UnwrapRef<typeof import('./src/utils/chartService')['fetchTokenPoolChartData']>
+    readonly fetchTokenPoolOwnerTrades: UnwrapRef<typeof import('./src/utils/tradeService')['fetchTokenPoolOwnerTrades']>
+    readonly fetchTokenPoolTrades: UnwrapRef<typeof import('./src/utils/tradeService')['fetchTokenPoolTrades']>
+    readonly fetchTokenPrice: UnwrapRef<typeof import('./src/utils/priceService')['fetchTokenPrice']>
+    readonly fetchTokenPriceAtTimestamp: UnwrapRef<typeof import('./src/utils/priceService')['fetchTokenPriceAtTimestamp']>
+    readonly fetchTokenPriceAtTimestamp: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenPriceAtTimestamp']>
+    readonly fetchTokenTrades: UnwrapRef<typeof import('./src/utils/tradeService')['fetchTokenTrades']>
+    readonly fetchTokensByVolume: UnwrapRef<typeof import('./src/utils/tokenListService')['fetchTokensByVolume']>
+    readonly fetchTopTokenTraders: UnwrapRef<typeof import('./src/utils/topTradersService')['fetchTopTokenTraders']>
+    readonly fetchTopTraders: UnwrapRef<typeof import('./src/utils/topTradersService')['fetchTopTraders']>
+    readonly fetchTrendingTokens: UnwrapRef<typeof import('./src/utils/tokenListService')['fetchTrendingTokens']>
+    readonly fetchUserActivities: UnwrapRef<typeof import('./src/utils/userActivityService')['fetchUserActivities']>
     readonly fetchUsersAndSave: UnwrapRef<typeof import('./src/utils/userService')['fetchUsersAndSave']>
+    readonly fetchWalletBasicTokens: UnwrapRef<typeof import('./src/utils/walletService')['fetchWalletBasicTokens']>
+    readonly fetchWalletPnL: UnwrapRef<typeof import('./src/utils/pnlService')['fetchWalletPnL']>
+    readonly fetchWalletTokenPnL: UnwrapRef<typeof import('./src/utils/pnlService')['fetchWalletTokenPnL']>
+    readonly fetchWalletTokens: UnwrapRef<typeof import('./src/utils/walletService')['fetchWalletTokens']>
+    readonly fetchWalletTrades: UnwrapRef<typeof import('./src/utils/walletService')['fetchWalletTrades']>
     readonly formatDate: UnwrapRef<typeof import('./src/@core/utils/formatters')['formatDate']>
     readonly formatDateToMonthShort: UnwrapRef<typeof import('./src/@core/utils/formatters')['formatDateToMonthShort']>
     readonly getActivePinia: UnwrapRef<typeof import('pinia')['getActivePinia']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
+    readonly getSupabaseClient: UnwrapRef<typeof import('./src/composables/useSupabase')['getSupabaseClient']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly hexToRgb: UnwrapRef<typeof import('./src/@core/utils/colorConverter')['hexToRgb']>
     readonly ignorableWatch: UnwrapRef<typeof import('@vueuse/core')['ignorableWatch']>
@@ -464,6 +530,7 @@ declare module 'vue' {
     readonly mapState: UnwrapRef<typeof import('pinia')['mapState']>
     readonly mapStores: UnwrapRef<typeof import('pinia')['mapStores']>
     readonly mapWritableState: UnwrapRef<typeof import('pinia')['mapWritableState']>
+    readonly markNotificationAsRead: UnwrapRef<typeof import('./src/utils/notificationService')['markNotificationAsRead']>
     readonly markRaw: UnwrapRef<typeof import('vue')['markRaw']>
     readonly nextTick: UnwrapRef<typeof import('vue')['nextTick']>
     readonly onActivated: UnwrapRef<typeof import('vue')['onActivated']>
@@ -515,12 +582,14 @@ declare module 'vue' {
     readonly rgbaToHex: UnwrapRef<typeof import('./src/@core/utils/colorConverter')['rgbaToHex']>
     readonly runConcurrently: UnwrapRef<typeof import('./src/utils/taskRunner')['runConcurrently']>
     readonly runWithInterval: UnwrapRef<typeof import('./src/utils/taskRunner')['runWithInterval']>
+    readonly searchTokens: UnwrapRef<typeof import('./src/utils/searchService')['searchTokens']>
     readonly setActivePinia: UnwrapRef<typeof import('pinia')['setActivePinia']>
     readonly setMapStoreSuffix: UnwrapRef<typeof import('pinia')['setMapStoreSuffix']>
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>
     readonly storeToRefs: UnwrapRef<typeof import('pinia')['storeToRefs']>
+    readonly supabase: UnwrapRef<typeof import('./src/composables/useSupabase')['supabase']>
     readonly syncRef: UnwrapRef<typeof import('@vueuse/core')['syncRef']>
     readonly syncRefs: UnwrapRef<typeof import('@vueuse/core')['syncRefs']>
     readonly templateRef: UnwrapRef<typeof import('@vueuse/core')['templateRef']>
@@ -665,6 +734,8 @@ declare module 'vue' {
     readonly usePrevious: UnwrapRef<typeof import('@vueuse/core')['usePrevious']>
     readonly useProjection: UnwrapRef<typeof import('@vueuse/math')['useProjection']>
     readonly useRafFn: UnwrapRef<typeof import('@vueuse/core')['useRafFn']>
+    readonly useRealtimeData: UnwrapRef<typeof import('./src/composables/useRealtimeData')['useRealtimeData']>
+    readonly useRealtimeTokenData: UnwrapRef<typeof import('./src/composables/useRealtimeTokenData')['useRealtimeTokenData']>
     readonly useRefHistory: UnwrapRef<typeof import('@vueuse/core')['useRefHistory']>
     readonly useResizeObserver: UnwrapRef<typeof import('@vueuse/core')['useResizeObserver']>
     readonly useResponsiveLeftSidebar: UnwrapRef<typeof import('./src/@core/composable/useResponsiveSidebar')['useResponsiveLeftSidebar']>
@@ -687,7 +758,6 @@ declare module 'vue' {
     readonly useStorageAsync: UnwrapRef<typeof import('@vueuse/core')['useStorageAsync']>
     readonly useStyleTag: UnwrapRef<typeof import('@vueuse/core')['useStyleTag']>
     readonly useSum: UnwrapRef<typeof import('@vueuse/math')['useSum']>
-    readonly useSupabase: UnwrapRef<typeof import('./src/composables/useSupabase')['useSupabase']>
     readonly useSupported: UnwrapRef<typeof import('@vueuse/core')['useSupported']>
     readonly useSwipe: UnwrapRef<typeof import('@vueuse/core')['useSwipe']>
     readonly useTemplateRef: UnwrapRef<typeof import('vue')['useTemplateRef']>

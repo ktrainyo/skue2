@@ -1,0 +1,397 @@
+Component Goals:
+
+1. Header Section
+Positioned at the top with a navigation back button on the left (←) and menu actions (like share or more options) on the right.
+The center features the title ("CANYON / SOL") displayed prominently in bold, with a timeframe indicator (e.g., "1m") in a subtle green accent to its right.
+The background is dark to maintain contrast, and the text is bright white for readability.
+2. Stats Section
+A grid layout containing the key stats: Price USD, Price (in SOL), Liquidity, FDV, and Market Cap.
+Each stat is displayed in its own box:
+The label (e.g., "PRICE USD") is in a smaller, lighter font (grayish color).
+The value (e.g., "$0.0003863") is bold and larger for emphasis.
+Two rows of stats, creating a balanced layout.
+3. Timeframes Section
+A row of four boxes displaying percentage changes over different timeframes: 5M, 1H, 6H, and 24H.
+Each box contains:
+The time period (e.g., "5M") at the top in a smaller font.
+The percentage change (e.g., "1.18%") below, prominently displayed in green if positive or red if negative.
+Boxes are separated evenly with small gaps to ensure clarity.
+4. Transaction Details Section
+A three-column grid displaying key transactional data: TXNS, VOLUME, and MAKERS.
+Each column contains:
+A label at the top (e.g., "TXNS") in a smaller, light font.
+The value (e.g., "2") in bold and larger size.
+The layout is compact and evenly spaced to fit in a single row.
+5. Buy/Sell Details Section
+Organized into rows of paired columns:
+First row: BUYS and SELLS (counts of transactions).
+Second row: BUY VOL and SELL VOL (transaction volume in dollars).
+Third row: BUYERS and SELLERS (count of unique buyers/sellers).
+Each box in the columns includes:
+A label in small, light gray text (e.g., "BUYS").
+The value in larger, bold white text.
+The design uses light green horizontal bars beneath values to visually represent proportions, adding a subtle sense of interactivity.
+6. Overall Design Aesthetic
+Dark mode interface: The background is a deep gray/black, while text is primarily white for readability, with green highlights for positive metrics (e.g., percentage changes, transaction bars).
+Typography:
+Labels are in smaller, lighter font (gray).
+Key metrics and values are bold and larger for emphasis.
+Layout:
+Uses grids and flexbox for consistent alignment and spacing.
+Sections are clearly separated to avoid visual clutter.
+Responsive Design:
+The layout is compact, ensuring it fits on a mobile screen (as the design is clearly mobile-oriented).
+Can be expanded for desktop if needed by adjusting grid column counts.
+
+
+Component idea:
+
+<template>
+  <div class="dashboard">
+    <!-- Header -->
+    <header class="header">
+      <div class="back-button">←</div>
+      <div class="title-container">
+        <h1>{{ title }}</h1>
+        <span class="time-frame">1m</span>
+      </div>
+      <div class="actions">...</div>
+    </header>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+      <div class="stat" v-for="(stat, index) in stats" :key="index">
+        <h3>{{ stat.label }}</h3>
+        <p>{{ stat.value }}</p>
+      </div>
+    </section>
+
+    <!-- Timeframes Section -->
+    <section class="timeframes-section">
+      <div class="timeframe" v-for="(timeframe, index) in timeframes" :key="index">
+        <span>{{ timeframe.period }}</span>
+        <p>{{ timeframe.percentage }}%</p>
+      </div>
+    </section>
+
+    <!-- Transaction Details Section -->
+    <section class="transaction-details">
+      <div class="details">
+        <h4>TXNS</h4>
+        <p>{{ transactions }}</p>
+      </div>
+      <div class="details">
+        <h4>VOLUME</h4>
+        <p>{{ volume }}</p>
+      </div>
+      <div class="details">
+        <h4>MAKERS</h4>
+        <p>{{ makers }}</p>
+      </div>
+    </section>
+
+    <!-- Buy/Sell Details -->
+    <section class="buy-sell-details">
+      <div class="row">
+        <div class="column">
+          <h4>BUYS</h4>
+          <p>{{ buys }}</p>
+        </div>
+        <div class="column">
+          <h4>SELLS</h4>
+          <p>{{ sells }}</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          <h4>BUY VOL</h4>
+          <p>{{ buyVolume }}</p>
+        </div>
+        <div class="column">
+          <h4>SELL VOL</h4>
+          <p>{{ sellVolume }}</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          <h4>BUYERS</h4>
+          <p>{{ buyers }}</p>
+        </div>
+        <div class="column">
+          <h4>SELLERS</h4>
+          <p>{{ sellers }}</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent, reactive } from "vue";
+
+export default defineComponent({
+  name: "Dashboard",
+  setup() {
+    const title = "CANYON / SOL";
+    const stats = reactive([
+      { label: "PRICE USD", value: "$0.0003863" },
+      { label: "PRICE", value: "0.052064 SOL" },
+      { label: "LIQUIDITY", value: "$21K" },
+      { label: "FDV", value: "$386K" },
+      { label: "MARKET CAP", value: "$386K" },
+    ]);
+
+    const timeframes = reactive([
+      { period: "5M", percentage: 1.18 },
+      { period: "1H", percentage: 1.18 },
+      { period: "6H", percentage: 1.18 },
+      { period: "24H", percentage: 1.18 },
+    ]);
+
+    const transactions = 2;
+    const volume = "$224";
+    const makers = 2;
+    const buys = 2;
+    const sells = 0;
+    const buyVolume = "$224";
+    const sellVolume = "$0";
+    const buyers = 2;
+    const sellers = 0;
+
+    return {
+      title,
+      stats,
+      timeframes,
+      transactions,
+      volume,
+      makers,
+      buys,
+      sells,
+      buyVolume,
+      sellVolume,
+      buyers,
+      sellers,
+    };
+  },
+});
+</script>
+
+<style scoped>
+/* General Styles */
+.dashboard {
+  font-family: Arial, sans-serif;
+  padding: 16px;
+  color: #ffffff;
+  background-color: #121212;
+  max-width: 400px;
+  margin: auto;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.back-button {
+  cursor: pointer;
+  font-size: 16px;
+}
+.title-container {
+  text-align: center;
+}
+.time-frame {
+  font-size: 14px;
+  color: #8bc34a;
+}
+
+/* Stats Section */
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.stat h3 {
+  font-size: 12px;
+  color: #aaaaaa;
+  margin: 0;
+}
+.stat p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Timeframes Section */
+.timeframes-section {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.timeframe span {
+  font-size: 12px;
+  color: #aaaaaa;
+}
+.timeframe p {
+  font-size: 14px;
+  color: #8bc34a;
+}
+
+/* Transaction Details */
+.transaction-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.details h4 {
+  font-size: 12px;
+  color: #aaaaaa;
+  margin: 0;
+}
+.details p {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Buy/Sell Details */
+.buy-sell-details {
+  margin-bottom: 16px;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.column {
+  flex: 1;
+  text-align: center;
+}
+.column h4 {
+  font-size: 12px;
+  color: #aaaaaa;
+  margin: 0;
+}
+.column p {
+  font-size: 14px;
+  margin: 0;
+  color: #ffffff;
+}
+</style>
+
+
+supabase schema for data:
+
+create view
+  public.token_overview as
+with
+  tokenstats as (
+    select
+      p.market as title,
+      p.price,
+      p.liquidity,
+      p."marketCap" ->> 'usd'::text as marketcap
+    from
+      pools p
+  ),
+  pricestats as (
+    select
+      tp.token,
+      tp.price as priceusd
+    from
+      token_prices tp
+  ),
+  tradestats as (
+    select
+      tt.token,
+      count(*) as transactions,
+      count(
+        case
+          when tt.type = 'buy'::text then 1
+          else null::integer
+        end
+      ) as buys,
+      count(
+        case
+          when tt.type = 'sell'::text then 1
+          else null::integer
+        end
+      ) as sells,
+      sum(
+        case
+          when tt.type = 'buy'::text then tt.volume
+          else 0::numeric
+        end
+      ) as buyvolume,
+      sum(
+        case
+          when tt.type = 'sell'::text then tt.volume
+          else 0::numeric
+        end
+      ) as sellvolume,
+      count(
+        distinct case
+          when tt.type = 'buy'::text then tt.wallet
+          else null::text
+        end
+      ) as buyers,
+      count(
+        distinct case
+          when tt.type = 'sell'::text then tt.wallet
+          else null::text
+        end
+      ) as sellers
+    from
+      token_trades tt
+    group by
+      tt.token
+  ),
+  timeframestats as (
+    select
+      tcd.token,
+      avg(
+        case
+          when tcd."interval" = '5M'::text then (tcd.close - tcd.open) / tcd.open * 100::numeric
+          else null::numeric
+        end
+      ) as "5M_percentage",
+      avg(
+        case
+          when tcd."interval" = '15M'::text then (tcd.close - tcd.open) / tcd.open * 100::numeric
+          else null::numeric
+        end
+      ) as "15M_percentage",
+      avg(
+        case
+          when tcd."interval" = '30M'::text then (tcd.close - tcd.open) / tcd.open * 100::numeric
+          else null::numeric
+        end
+      ) as "30M_percentage"
+    from
+      token_chart_data tcd
+    group by
+      tcd.token
+  )
+select
+  ts.title,
+  ts.price,
+  ts.liquidity,
+  ts.marketcap,
+  ps.priceusd,
+  tr.transactions,
+  tr.buys,
+  tr.sells,
+  tr.buyvolume,
+  tr.sellvolume,
+  tr.buyers,
+  tr.sellers,
+  tf."5M_percentage",
+  tf."15M_percentage",
+  tf."30M_percentage"
+from
+  tokenstats ts
+  join pricestats ps on ts.title = ps.token
+  join tradestats tr on ts.title = tr.token
+  join timeframestats tf on ts.title = tf.token;

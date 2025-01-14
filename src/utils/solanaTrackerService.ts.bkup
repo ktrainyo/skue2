@@ -1,0 +1,680 @@
+import { createClient } from '@supabase/supabase-js';
+import axios from 'axios';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
+const BASE_API_URL = 'https://data.solanatracker.io';
+const API_KEY = import.meta.env.VITE_SOLANA_TRACKER_API_KEY;
+
+const headers = {
+  'x-api-key': API_KEY,
+  'Accept': 'application/json'
+};
+
+export const fetchTokenInfo = async (tokenAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/tokens/${tokenAddress}`, { headers });
+    const tokenData = response.data.token;
+    const poolsData = response.data.pools;
+    const eventsData = response.data.events;
+    const riskData = response.data.risk;
+
+    // Insert token data into Supabase
+    const { data, error } = await supabase
+      .from('tokens')
+      .upsert(tokenData);
+
+    if (error) throw error;
+
+    // Insert pools data into Supabase
+    for (const pool of poolsData) {
+      const { data, error } = await supabase
+        .from('pools')
+        .upsert(pool);
+
+      if (error) throw error;
+    }
+
+    // Insert events data into Supabase
+    for (const [interval, event] of Object.entries(eventsData)) {
+      const eventData = { ...event, interval, token: tokenAddress };
+      const { data, error } = await supabase
+        .from('events')
+        .upsert(eventData);
+
+      if (error) throw error;
+    }
+
+    // Insert risk data into Supabase
+    const { data: riskInsertData, error: riskInsertError } = await supabase
+      .from('risks')
+      .upsert({ ...riskData, token: tokenAddress });
+
+    if (riskInsertError) throw riskInsertError;
+
+    return { tokenData, poolsData, eventsData, riskData };
+  } catch (error) {
+    console.error('Error fetching token info:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenHolders = async (tokenAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/tokens/${tokenAddress}/holders`, { headers });
+    const holdersData = response.data.accounts;
+
+    // Insert holders data into Supabase
+    for (const holder of holdersData) {
+      const { data, error } = await supabase
+        .from('token_holders')
+        .upsert({ ...holder, token: tokenAddress });
+
+      if (error) throw error;
+    }
+
+    return holdersData;
+  } catch (error) {
+    console.error('Error fetching token holders:', error);
+    throw error;
+  }
+};
+
+// Add more functions for other endpoints as needed
+
+export const fetchTokenAth = async (tokenAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/tokens/${tokenAddress}/ath`, { headers });
+    const athData = response.data;
+
+    // Insert ATH data into Supabase
+    const { data, error } = await supabase
+      .from('token_ath')
+      .upsert({ ...athData, token: tokenAddress });
+
+    if (error) throw error;
+
+    return athData;
+  } catch (error) {
+    console.error('Error fetching token ATH:', error);
+    throw error;
+  }
+};
+
+export const searchTokens = async (query: string, page: number = 1, limit: number = 100) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/search`, {
+      headers,
+      params: { query, page, limit }
+    });
+    const searchData = response.data.data;
+
+    // Insert search data into Supabase
+    for (const token of searchData) {
+      const { data, error } = await supabase
+        .from('search_results')
+        .upsert(token);
+
+      if (error) throw error;
+    }
+
+    return searchData;
+  } catch (error) {
+    console.error('Error searching tokens:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenHoldersTop = async (tokenAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/tokens/${tokenAddress}/holders/top`, { headers });
+    const holdersTopData = response.data;
+
+    // Insert top holders data into Supabase
+    for (const holder of holdersTopData) {
+      const { data, error } = await supabase
+        .from('token_holders_top')
+        .upsert({ ...holder, token: tokenAddress });
+
+      if (error) throw error;
+    }
+
+    return holdersTopData;
+  } catch (error) {
+    console.error('Error fetching top token holders:', error);
+    throw error;
+  }
+};
+
+export const fetchLatestTokens = async () => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/tokens/latest`, { headers });
+    const latestTokensData = response.data;
+
+    // Insert latest tokens data into Supabase
+    for (const token of latestTokensData) {
+      const { data, error } = await supabase
+        .from('latest_tokens')
+        .upsert(token);
+
+      if (error) throw error;
+    }
+
+    return latestTokensData;
+  } catch (error) {
+    console.error('Error fetching latest tokens:', error);
+    throw error;
+  }
+};
+
+export const fetchTrendingTokens = async (timeframe: string = '') => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/tokens/trending${timeframe ? `/${timeframe}` : ''}`, { headers });
+    const trendingTokensData = response.data;
+
+    // Insert trending tokens data into Supabase
+    for (const token of trendingTokensData) {
+      const { data, error } = await supabase
+        .from('trending_tokens')
+        .upsert(token);
+
+      if (error) throw error;
+    }
+
+    return trendingTokensData;
+  } catch (error) {
+    console.error('Error fetching trending tokens:', error);
+    throw error;
+  }
+};
+
+export const fetchTokensByVolume = async () => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/tokens/volume`, { headers });
+    const tokensByVolumeData = response.data;
+
+    // Insert tokens by volume data into Supabase
+    for (const token of tokensByVolumeData) {
+      const { data, error } = await supabase
+        .from('tokens_by_volume')
+        .upsert(token);
+
+      if (error) throw error;
+    }
+
+    return tokensByVolumeData;
+  } catch (error) {
+    console.error('Error fetching tokens by volume:', error);
+    throw error;
+  }
+};
+
+export const fetchMultiTokens = async () => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/tokens/multi/all`, { headers });
+    const multiTokensData = response.data;
+
+    // Insert multi tokens data into Supabase
+    for (const token of multiTokensData.latest) {
+      const { data, error } = await supabase
+        .from('multi_tokens_latest')
+        .upsert(token);
+
+      if (error) throw error;
+    }
+
+    for (const token of multiTokensData.graduating) {
+      const { data, error } = await supabase
+        .from('multi_tokens_graduating')
+        .upsert(token);
+
+      if (error) throw error;
+    }
+
+    for (const token of multiTokensData.graduated) {
+      const { data, error } = await supabase
+        .from('multi_tokens_graduated')
+        .upsert(token);
+
+      if (error) throw error;
+    }
+
+    return multiTokensData;
+  } catch (error) {
+    console.error('Error fetching multi tokens:', error);
+    throw error;
+  }
+};
+
+export const fetchGraduatedTokens = async () => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/tokens/multi/graduated`, { headers });
+    const graduatedTokensData = response.data;
+
+    // Insert graduated tokens data into Supabase
+    for (const token of graduatedTokensData) {
+      const { data, error } = await supabase
+        .from('graduated_tokens')
+        .upsert(token);
+
+      if (error) throw error;
+    }
+
+    return graduatedTokensData;
+  } catch (error) {
+    console.error('Error fetching graduated tokens:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenPrice = async (tokenAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/price`, {
+      headers,
+      params: { token: tokenAddress }
+    });
+    const priceData = response.data;
+
+    // Insert price data into Supabase
+    const { data, error } = await supabase
+      .from('token_prices')
+      .upsert({ ...priceData, token: tokenAddress });
+
+    if (error) throw error;
+
+    return priceData;
+  } catch (error) {
+    console.error('Error fetching token price:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenPriceHistory = async (tokenAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/price/history`, {
+      headers,
+      params: { token: tokenAddress }
+    });
+    const priceHistoryData = response.data;
+
+    // Insert price history data into Supabase
+    const { data, error } = await supabase
+      .from('token_price_history')
+      .upsert({ ...priceHistoryData, token: tokenAddress });
+
+    if (error) throw error;
+
+    return priceHistoryData;
+  } catch (error) {
+    console.error('Error fetching token price history:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenPriceAtTimestamp = async (tokenAddress: string, timestamp: number) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/price/history/timestamp`, {
+      headers,
+      params: { token: tokenAddress, timestamp }
+    });
+    const priceAtTimestampData = response.data;
+
+    // Insert price at timestamp data into Supabase
+    const { data, error } = await supabase
+      .from('token_price_at_timestamp')
+      .upsert({ ...priceAtTimestampData, token: tokenAddress });
+
+    if (error) throw error;
+
+    return priceAtTimestampData;
+  } catch (error) {
+    console.error('Error fetching token price at timestamp:', error);
+    throw error;
+  }
+};
+
+export const fetchWalletTokens = async (owner: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/wallet/${owner}`, { headers });
+    const walletTokensData = response.data;
+
+    // Insert wallet tokens data into Supabase
+    for (const token of walletTokensData.tokens) {
+      const { data, error } = await supabase
+        .from('wallet_tokens')
+        .upsert({ ...token, owner });
+
+      if (error) throw error;
+    }
+
+    return walletTokensData;
+  } catch (error) {
+    console.error('Error fetching wallet tokens:', error);
+    throw error;
+  }
+};
+
+export const fetchWalletBasicTokens = async (owner: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/wallet/${owner}/basic`, { headers });
+    const walletBasicTokensData = response.data;
+
+    // Insert wallet basic tokens data into Supabase
+    for (const token of walletBasicTokensData.tokens) {
+      const { data, error } = await supabase
+        .from('wallet_basic_tokens')
+        .upsert({ ...token, owner });
+
+      if (error) throw error;
+    }
+
+    return walletBasicTokensData;
+  } catch (error) {
+    console.error('Error fetching wallet basic tokens:', error);
+    throw error;
+  }
+};
+
+export const fetchWalletTrades = async (owner: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/wallet/${owner}/trades`, { headers });
+    const walletTradesData = response.data.trades;
+
+    // Insert wallet trades data into Supabase
+    for (const trade of walletTradesData) {
+      const { data, error } = await supabase
+        .from('wallet_trades')
+        .upsert({ ...trade, owner });
+
+      if (error) throw error;
+    }
+
+    return walletTradesData;
+  } catch (error) {
+    console.error('Error fetching wallet trades:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenTrades = async (tokenAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/trades/${tokenAddress}`, { headers });
+    const tokenTradesData = response.data.trades;
+
+    // Insert token trades data into Supabase
+    for (const trade of tokenTradesData) {
+      const { data, error } = await supabase
+        .from('token_trades')
+        .upsert({ ...trade, token: tokenAddress });
+
+      if (error) throw error;
+    }
+
+    return tokenTradesData;
+  } catch (error) {
+    console.error('Error fetching token trades:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenPoolTrades = async (tokenAddress: string, poolAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/trades/${tokenAddress}/${poolAddress}`, { headers });
+    const tokenPoolTradesData = response.data.trades;
+
+    // Insert token pool trades data into Supabase
+    for (const trade of tokenPoolTradesData) {
+      const { data, error } = await supabase
+        .from('token_pool_trades')
+        .upsert({ ...trade, token: tokenAddress, pool: poolAddress });
+
+      if (error) throw error;
+    }
+
+    return tokenPoolTradesData;
+  } catch (error) {
+    console.error('Error fetching token pool trades:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenPoolOwnerTrades = async (tokenAddress: string, poolAddress: string, owner: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/trades/${tokenAddress}/${poolAddress}/${owner}`, { headers });
+    const tokenPoolOwnerTradesData = response.data.trades;
+
+    // Insert token pool owner trades data into Supabase
+    for (const trade of tokenPoolOwnerTradesData) {
+      const { data, error } = await supabase
+        .from('token_pool_owner_trades')
+        .upsert({ ...trade, token: tokenAddress, pool: poolAddress, owner });
+
+      if (error) throw error;
+    }
+
+    return tokenPoolOwnerTradesData;
+  } catch (error) {
+    console.error('Error fetching token pool owner trades:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenWalletTrades = async (tokenAddress: string, owner: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/trades/${tokenAddress}/by-wallet/${owner}`, { headers });
+    const tokenWalletTradesData = response.data.trades;
+
+    // Insert token wallet trades data into Supabase
+    for (const trade of tokenWalletTradesData) {
+      const { data, error } = await supabase
+        .from('token_wallet_trades')
+        .upsert({ ...trade, token: tokenAddress, owner });
+
+      if (error) throw error;
+    }
+
+    return tokenWalletTradesData;
+  } catch (error) {
+    console.error('Error fetching token wallet trades:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenChartData = async (tokenAddress: string, interval: string = '1d') => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/chart/${tokenAddress}`, {
+      headers,
+      params: { type: interval }
+    });
+    const chartData = response.data.oclhv;
+
+    // Insert chart data into Supabase
+    for (const dataPoint of chartData) {
+      const { data, error } = await supabase
+        .from('token_chart_data')
+        .upsert({ ...dataPoint, token: tokenAddress, interval });
+
+      if (error) throw error;
+    }
+
+    return chartData;
+  } catch (error) {
+    console.error('Error fetching token chart data:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenPoolChartData = async (tokenAddress: string, poolAddress: string, interval: string = '1d') => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/chart/${tokenAddress}/${poolAddress}`, {
+      headers,
+      params: { type: interval }
+    });
+    const chartData = response.data.oclhv;
+
+    // Insert chart data into Supabase
+    for (const dataPoint of chartData) {
+      const { data, error } = await supabase
+        .from('token_pool_chart_data')
+        .upsert({ ...dataPoint, token: tokenAddress, pool: poolAddress, interval });
+
+      if (error) throw error;
+    }
+
+    return chartData;
+  } catch (error) {
+    console.error('Error fetching token pool chart data:', error);
+    throw error;
+  }
+};
+
+export const fetchWalletPnL = async (owner: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/pnl/${owner}`, { headers });
+    const pnlData = response.data;
+
+    // Insert PnL data into Supabase
+    const { data, error } = await supabase
+      .from('wallet_pnl')
+      .upsert({ ...pnlData, owner });
+
+    if (error) throw error;
+
+    return pnlData;
+  } catch (error) {
+    console.error('Error fetching wallet PnL:', error);
+    throw error;
+  }
+};
+
+export const fetchFirstBuyers = async (tokenAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/first-buyers/${tokenAddress}`, { headers });
+    const firstBuyersData = response.data;
+
+    // Insert first buyers data into Supabase
+    for (const buyer of firstBuyersData) {
+      const { data, error } = await supabase
+        .from('first_buyers')
+        .upsert({ ...buyer, token: tokenAddress });
+
+      if (error) throw error;
+    }
+
+    return firstBuyersData;
+  } catch (error) {
+    console.error('Error fetching first buyers:', error);
+    throw error;
+  }
+};
+
+export const fetchWalletTokenPnL = async (owner: string, tokenAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/pnl/${owner}/${tokenAddress}`, { headers });
+    const tokenPnLData = response.data;
+
+    // Insert token PnL data into Supabase
+    const { data, error } = await supabase
+      .from('wallet_token_pnl')
+      .upsert({ ...tokenPnLData, owner, token: tokenAddress });
+
+    if (error) throw error;
+
+    return tokenPnLData;
+  } catch (error) {
+    console.error('Error fetching wallet token PnL:', error);
+    throw error;
+  }
+};
+
+export const fetchTopTraders = async (page: number = 1, expandPnl: boolean = false, sortBy: string = 'total') => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/top-traders/all/${page}`, {
+      headers,
+      params: { expandPnl, sortBy }
+    });
+    const topTradersData = response.data.wallets;
+
+    // Insert top traders data into Supabase
+    for (const trader of topTradersData) {
+      const { data, error } = await supabase
+        .from('top_traders')
+        .upsert(trader);
+
+      if (error) throw error;
+    }
+
+    return topTradersData;
+  } catch (error) {
+    console.error('Error fetching top traders:', error);
+    throw error;
+  }
+};
+
+export const fetchTopTokenTraders = async (tokenAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/top-traders/${tokenAddress}`, { headers });
+    const topTokenTradersData = response.data;
+
+    // Insert top token traders data into Supabase
+    for (const trader of topTokenTradersData) {
+      const { data, error } = await supabase
+        .from('top_token_traders')
+        .upsert({ ...trader, token: tokenAddress });
+
+      if (error) throw error;
+    }
+
+    return topTokenTradersData;
+  } catch (error) {
+    console.error('Error fetching top token traders:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenPoolStats = async (tokenAddress: string, poolAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/stats/${tokenAddress}/${poolAddress}`, { headers });
+    const poolStatsData = response.data;
+
+    // Insert pool stats data into Supabase
+    for (const [interval, stats] of Object.entries(poolStatsData)) {
+      const statsData = { ...stats, interval, token: tokenAddress, pool: poolAddress };
+      const { data, error } = await supabase
+        .from('token_pool_stats')
+        .upsert(statsData);
+
+      if (error) throw error;
+    }
+
+    return poolStatsData;
+  } catch (error) {
+    console.error('Error fetching token pool stats:', error);
+    throw error;
+  }
+};
+
+export const fetchTokenStats = async (tokenAddress: string) => {
+  try {
+    const response = await axios.get(`${BASE_API_URL}/stats/${tokenAddress}`, { headers });
+    const tokenStatsData = response.data;
+
+    // Insert token stats data into Supabase
+    for (const [interval, stats] of Object.entries(tokenStatsData)) {
+      const statsData = { ...stats, interval, token: tokenAddress };
+      const { data, error } = await supabase
+        .from('token_stats')
+        .upsert(statsData);
+
+      if (error) throw error;
+    }
+
+    return tokenStatsData;
+  } catch (error) {
+    console.error('Error fetching token stats:', error);
+    throw error;
+  }
+};
