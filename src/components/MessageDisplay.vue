@@ -10,7 +10,7 @@
       right
     >
       {{ message.content }}
-      <template v-slot:action="{ attrs }">
+      <template v-slot:actions>
         <v-btn
           icon
           @click="removeMessage(index)"
@@ -99,8 +99,14 @@ export default defineComponent({
     VListItemAction,
     VSpacer,
   },
-  setup() {
-    const emitter = inject('emitter');
+  props: {
+    action: {
+      type: Function,
+      required: false,
+    },
+  },
+  setup(props) {
+    const emitter = inject('emitter') as { on: (event: string, callback: Function) => void };
     const messages = ref<Array<{ id: string; content: string; timestamp: string; type: string }>>([]);
     const isMinimized = ref(true);
     const searchQuery = ref('');
@@ -164,7 +170,7 @@ export default defineComponent({
     });
 
     onMounted(() => {
-      emitter.on('logMessage', (message) => {
+      emitter.on('logMessage', (message: { content: string; type: string } & Record<string, any>) => {
         logMessage(message.content, message.type);
       });
     });

@@ -8,7 +8,9 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('supabaseUrl and supabaseKey are required.');
 }
 
-let supabaseInstance;
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+let supabaseInstance: SupabaseClient | undefined;
 
 export const getSupabaseClient = () => {
   if (!supabaseInstance) {

@@ -4,7 +4,8 @@ import fetchSolPrice from '@/services/solPriceService'
 import { VerticalNav } from '@layouts/components'
 import { useLayoutConfigStore } from '@layouts/stores/config'
 import type { VerticalNavItems } from '@layouts/types'
-import { onMounted, ref } from 'vue'
+import { syncRef, useToggle, useWindowSize } from '@vueuse/core'
+import { computed, onMounted, ref, toRef, watch } from 'vue'
 
 interface Props {
   navItems: VerticalNavItems
@@ -160,6 +161,20 @@ onMounted(() => {
 @use "@layouts/styles/placeholders";
 @use "@layouts/styles/mixins";
 
+.layout-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Removed duplicate .navbar-content-container
+
+.navbar-content-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .layout-wrapper.layout-nav-type-vertical {
   // TODO(v2): Check why we need height in vertical nav & min-height in horizontal nav
   block-size: 100%;
@@ -265,18 +280,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   block-size: 100vh;
-}
-
-.layout-navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.navbar-content-container {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
 }
 
 .sol-price-box {

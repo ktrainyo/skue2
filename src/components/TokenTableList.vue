@@ -150,7 +150,7 @@ export default defineComponent({
       stopPolling(token);
       token.timer = setInterval(async () => {
         await fetchTokenChartData(token.token);
-        await fetchTokenPriceAtTimestamp(token.token);
+        await fetchTokenPriceAtTimestamp(token.token, new Date().toISOString());
       }, token.frequency);
     };
 
