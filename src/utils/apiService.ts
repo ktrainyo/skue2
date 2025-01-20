@@ -1,13 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
-import { useApi } from '@vuexy/api';
+import axios from 'axios';
 
 const supabase = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
 
 export const createApiService = (apiEndpoint: string, supabaseTable: string) => {
   return async (transformFn?: (data: any) => any) => {
     try {
-      const { data: apiData, error: apiError } = await useApi(apiEndpoint).json();
-      if (apiError) throw apiError;
+      const { data: apiData } = await axios.get(apiEndpoint);
 
       const transformedData = transformFn ? transformFn(apiData) : apiData;
 

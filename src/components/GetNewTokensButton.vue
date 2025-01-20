@@ -36,7 +36,7 @@ const tokenStore = useTokenStore();
 const isServiceOn = ref(false);
 const error = ref<string | null>(null);
 const isLoading = ref(false);
-let intervalId: number | null = null;
+let intervalId: ReturnType<typeof setInterval> | null = null;
 
 const buttonText = computed(() => {
   if (isLoading.value) return 'Processing...';
@@ -85,8 +85,6 @@ const toggleService = async () => {
     }
   }
 };
-
-// No return statement needed in setup script
 </script>
 
 <style scoped>

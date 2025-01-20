@@ -85,7 +85,7 @@
 
 <script lang="ts">
 import { getSupabaseClient } from '@/composables/useSupabase';
-import { fetchTokenChartData, fetchTokenPriceAtTimestamp } from '@/utils/tokenService';
+import { fetchTokenChartData, fetchTokenPriceAtTimestamp } from '@/services/tokenService';
 import Select from 'primevue/select';
 import ToggleSwitch from 'primevue/toggleswitch';
 import { defineComponent, onMounted, ref } from 'vue';

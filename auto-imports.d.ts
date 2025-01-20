@@ -6,12 +6,14 @@
 export {}
 declare global {
   const $api: typeof import('./src/utils/api')['$api']
+  const $solanaTrackerApi: typeof import('./src/utils/api')['$solanaTrackerApi']
   const COOKIE_MAX_AGE_1_YEAR: typeof import('./src/utils/constants')['COOKIE_MAX_AGE_1_YEAR']
   const CreateUrl: typeof import('./src/@core/composable/CreateUrl')['CreateUrl']
   const EffectScope: typeof import('vue')['EffectScope']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
   const alphaDashValidator: typeof import('./src/@core/utils/validators')['alphaDashValidator']
   const alphaValidator: typeof import('./src/@core/utils/validators')['alphaValidator']
+  const apiHandler: typeof import('./src/utils/api')['apiHandler']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
   const avatarText: typeof import('./src/@core/utils/formatters')['avatarText']
@@ -24,6 +26,7 @@ declare global {
   const confirmedValidator: typeof import('./src/@core/utils/validators')['confirmedValidator']
   const controlledComputed: typeof import('@vueuse/core')['controlledComputed']
   const controlledRef: typeof import('@vueuse/core')['controlledRef']
+  const createApiHandler: typeof import('./src/utils/api')['createApiHandler']
   const createApiService: typeof import('./src/utils/apiService')['createApiService']
   const createApp: typeof import('vue')['createApp']
   const createEventHook: typeof import('@vueuse/core')['createEventHook']
@@ -64,7 +67,7 @@ declare global {
   const fetchOrdersAndSave: typeof import('./src/utils/orderService')['fetchOrdersAndSave']
   const fetchTokenAth: typeof import('./src/utils/tokenService')['fetchTokenAth']
   const fetchTokenByMintAddress: typeof import('./src/composables/useSupabase')['fetchTokenByMintAddress']
-  const fetchTokenChartData: typeof import('./src/utils/tokenService')['fetchTokenChartData']
+  const fetchTokenChartData: typeof import('./src/utils/chartService')['fetchTokenChartData']
   const fetchTokenHolders: typeof import('./src/utils/tokenService')['fetchTokenHolders']
   const fetchTokenHoldersTop: typeof import('./src/utils/tokenService')['fetchTokenHoldersTop']
   const fetchTokenInfo: typeof import('./src/utils/tokenService')['fetchTokenInfo']
@@ -73,7 +76,7 @@ declare global {
   const fetchTokenPoolStats: typeof import('./src/utils/solanaTrackerService.ts.bkup')['fetchTokenPoolStats']
   const fetchTokenPoolTrades: typeof import('./src/utils/tradeService')['fetchTokenPoolTrades']
   const fetchTokenPrice: typeof import('./src/utils/priceService')['fetchTokenPrice']
-  const fetchTokenPriceAtTimestamp: typeof import('./src/utils/tokenService')['fetchTokenPriceAtTimestamp']
+  const fetchTokenPriceAtTimestamp: typeof import('./src/utils/priceService')['fetchTokenPriceAtTimestamp']
   const fetchTokenPriceHistory: typeof import('./src/utils/priceService')['fetchTokenPriceHistory']
   const fetchTokenStats: typeof import('./src/utils/solanaTrackerService.ts.bkup')['fetchTokenStats']
   const fetchTokenTrades: typeof import('./src/utils/tradeService')['fetchTokenTrades']
@@ -182,6 +185,7 @@ declare global {
   const shallowReactive: typeof import('vue')['shallowReactive']
   const shallowReadonly: typeof import('vue')['shallowReadonly']
   const shallowRef: typeof import('vue')['shallowRef']
+  const solanaTrackerHandler: typeof import('./src/utils/api')['solanaTrackerHandler']
   const storeToRefs: typeof import('pinia')['storeToRefs']
   const supabase: typeof import('./src/composables/useSupabase')['supabase']
   const syncRef: typeof import('@vueuse/core')['syncRef']
@@ -423,11 +427,13 @@ declare module 'vue' {
   interface GlobalComponents {}
   interface ComponentCustomProperties {
     readonly $api: UnwrapRef<typeof import('./src/utils/api')['$api']>
+    readonly $solanaTrackerApi: UnwrapRef<typeof import('./src/utils/api')['$solanaTrackerApi']>
     readonly COOKIE_MAX_AGE_1_YEAR: UnwrapRef<typeof import('./src/utils/constants')['COOKIE_MAX_AGE_1_YEAR']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly alphaDashValidator: UnwrapRef<typeof import('./src/@core/utils/validators')['alphaDashValidator']>
     readonly alphaValidator: UnwrapRef<typeof import('./src/@core/utils/validators')['alphaValidator']>
+    readonly apiHandler: UnwrapRef<typeof import('./src/utils/api')['apiHandler']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
     readonly avatarText: UnwrapRef<typeof import('./src/@core/utils/formatters')['avatarText']>
@@ -440,6 +446,7 @@ declare module 'vue' {
     readonly confirmedValidator: UnwrapRef<typeof import('./src/@core/utils/validators')['confirmedValidator']>
     readonly controlledComputed: UnwrapRef<typeof import('@vueuse/core')['controlledComputed']>
     readonly controlledRef: UnwrapRef<typeof import('@vueuse/core')['controlledRef']>
+    readonly createApiHandler: UnwrapRef<typeof import('./src/utils/api')['createApiHandler']>
     readonly createApiService: UnwrapRef<typeof import('./src/utils/apiService')['createApiService']>
     readonly createApp: UnwrapRef<typeof import('vue')['createApp']>
     readonly createEventHook: UnwrapRef<typeof import('@vueuse/core')['createEventHook']>
@@ -465,10 +472,10 @@ declare module 'vue' {
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
     readonly emailValidator: UnwrapRef<typeof import('./src/@core/utils/validators')['emailValidator']>
     readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
-    readonly fetchAndInsertNewTokens: UnwrapRef<typeof import('./src/utils/tokenService')['fetchAndInsertNewTokens']>
     readonly fetchAndInsertTokenHistorical: UnwrapRef<typeof import('./src/utils/callStaticTokensHistoricalService')['fetchAndInsertTokenHistorical']>
     readonly fetchAndInsertTokenMarketData: UnwrapRef<typeof import('./src/utils/callStaticTokensMarketService')['fetchAndInsertTokenMarketData']>
     readonly fetchAndInsertTokenMetadata: UnwrapRef<typeof import('./src/utils/callStaticTokensMetadataService')['fetchAndInsertTokenMetadata']>
+    readonly fetchAndInsertTokenVolume: UnwrapRef<typeof import('./src/utils/callStaticTokensVolumeService')['fetchAndInsertTokenVolume']>
     readonly fetchFirstBuyers: UnwrapRef<typeof import('./src/utils/pnlService')['fetchFirstBuyers']>
     readonly fetchGraduatedTokens: UnwrapRef<typeof import('./src/utils/tokenListService')['fetchGraduatedTokens']>
     readonly fetchLatestTokens: UnwrapRef<typeof import('./src/utils/tokenListService')['fetchLatestTokens']>
@@ -476,19 +483,14 @@ declare module 'vue' {
     readonly fetchMultiTokens: UnwrapRef<typeof import('./src/utils/tokenListService')['fetchMultiTokens']>
     readonly fetchNotifications: UnwrapRef<typeof import('./src/utils/notificationService')['fetchNotifications']>
     readonly fetchOrdersAndSave: UnwrapRef<typeof import('./src/utils/orderService')['fetchOrdersAndSave']>
-    readonly fetchTokenAth: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenAth']>
     readonly fetchTokenByMintAddress: UnwrapRef<typeof import('./src/composables/useSupabase')['fetchTokenByMintAddress']>
     readonly fetchTokenChartData: UnwrapRef<typeof import('./src/utils/chartService')['fetchTokenChartData']>
-    readonly fetchTokenChartData: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenChartData']>
-    readonly fetchTokenHolders: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenHolders']>
-    readonly fetchTokenHoldersTop: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenHoldersTop']>
-    readonly fetchTokenInfo: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenInfo']>
     readonly fetchTokenPoolChartData: UnwrapRef<typeof import('./src/utils/chartService')['fetchTokenPoolChartData']>
     readonly fetchTokenPoolOwnerTrades: UnwrapRef<typeof import('./src/utils/tradeService')['fetchTokenPoolOwnerTrades']>
     readonly fetchTokenPoolTrades: UnwrapRef<typeof import('./src/utils/tradeService')['fetchTokenPoolTrades']>
     readonly fetchTokenPrice: UnwrapRef<typeof import('./src/utils/priceService')['fetchTokenPrice']>
     readonly fetchTokenPriceAtTimestamp: UnwrapRef<typeof import('./src/utils/priceService')['fetchTokenPriceAtTimestamp']>
-    readonly fetchTokenPriceAtTimestamp: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenPriceAtTimestamp']>
+    readonly fetchTokenPriceHistory: UnwrapRef<typeof import('./src/utils/priceService')['fetchTokenPriceHistory']>
     readonly fetchTokenTrades: UnwrapRef<typeof import('./src/utils/tradeService')['fetchTokenTrades']>
     readonly fetchTokensByVolume: UnwrapRef<typeof import('./src/utils/tokenListService')['fetchTokensByVolume']>
     readonly fetchTopTokenTraders: UnwrapRef<typeof import('./src/utils/topTradersService')['fetchTopTokenTraders']>
@@ -593,6 +595,7 @@ declare module 'vue' {
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>
+    readonly solanaTrackerHandler: UnwrapRef<typeof import('./src/utils/api')['solanaTrackerHandler']>
     readonly supabase: UnwrapRef<typeof import('./src/composables/useSupabase')['supabase']>
     readonly syncRef: UnwrapRef<typeof import('@vueuse/core')['syncRef']>
     readonly syncRefs: UnwrapRef<typeof import('@vueuse/core')['syncRefs']>

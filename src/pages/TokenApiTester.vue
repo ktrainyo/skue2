@@ -40,7 +40,7 @@
     <div class="overview-container">
       <div>
         <h3>Token Overview (Direct)</h3>
-        <TokenOverviewDirect v-if="mostRecentTokenData" :token="mostRecentTokenData.token" :tokenData="mostRecentTokenData" />
+        <TokenOverviewDirect v-if="mostRecentTokenData" :token="mostRecentTokenData?.token" :tokenData="mostRecentTokenData" />
       </div>
     </div>
     <div class="loops-table">
@@ -79,9 +79,9 @@ import MessageDisplay from '@/components/MessageDisplay.vue';
 import TokenOverviewDirect from '@/components/TokenOverviewDirect.vue';
 import TokenTableList from '@/components/TokenTableList.vue';
 import { getSupabaseClient } from '@/composables/useSupabase';
+import { fetchTokenAth, fetchTokenChartData, fetchTokenHolders, fetchTokenHoldersTop, fetchTokenInfo, fetchTokenPriceAtTimestamp } from '@/services/tokenService';
 import { fetchTokenPrice, fetchTokenPriceHistory } from '@/utils/priceService';
 import { runWithInterval } from '@/utils/taskRunner';
-import { fetchTokenAth, fetchTokenChartData, fetchTokenHolders, fetchTokenHoldersTop, fetchTokenInfo, fetchTokenPriceAtTimestamp } from '@/utils/tokenService';
 import { fetchTokenPoolOwnerTrades, fetchTokenPoolTrades, fetchTokenTrades } from '@/utils/tradeService';
 import { onMounted, ref, watch } from 'vue';
 
@@ -95,7 +95,38 @@ const isLoopingEnabled = ref(false);
 const statusMessage = ref('');
 const loops = ref<any[]>([]);
 const lastFetchedTokenData = ref(null);
-const mostRecentTokenData = ref(null);
+interface TokenData {
+  token: string;
+  title: string;
+  priceusd: number;
+  price: number;
+  liquidity: number;
+  fdv: number;
+  marketcap: number;
+  txns: number;
+  volume: number;
+  makers: number;
+  buys: number;
+  sells: number;
+  buy_volume: number;
+  sell_volume: number;
+  '1hr_percentage': number;
+  '6hr_percentage': number;
+  '12hr_percentage': number;
+  '24hr_percentage': number;
+  '7d_percentage': number;
+  '30d_percentage': number;
+  buyers: number;
+  sellers: number;
+  '1M_percentage': number;
+  '5M_percentage': number;
+  '10M_percentage': number;
+  '30M_percentage': number;
+  '1Y_percentage': number;
+  '3Y_percentage': number;
+}
+
+const mostRecentTokenData = ref<TokenData | null>(null);
 let loopIdCounter = 0;
 
 const apiCalls = [
@@ -147,7 +178,8 @@ onMounted(() => {
 const startApiCalls = () => {
   isLoading.value = true;
   statusMessage.value = 'Starting API calls...';
-  const messageDisplay = ref<MessageDisplay>();
+  const messageDisplay = ref<typeof MessageDisplay>();
+  const poolAddress = ''; // Define poolAddress here
 
   const selectedFns = apiCalls
     .filter(apiCall => selectedApiCalls.value.includes(apiCall.name))
@@ -165,23 +197,24 @@ const startApiCalls = () => {
 
     if (isLoopingEnabled.value) {
       loop.stopLoop = runWithInterval(async () => {
-        await apiCall.fn(tokenAddress.value.trim()).catch(error => {
+        const owner = ''; // Define owner here
+        await apiCall.fn(tokenAddress.value.trim(), poolAddress, owner).catch(error => {
           console.error(error);
-          messageDisplay.value?.logMessage(`Error: ${error.message}`, 'error');
+          messageDisplay.value?.logMessage(`Error: ${(error as any).message}`, 'error');
         });
       }, loopInterval.value);
       loop.isLooping = true;
     } else {
       (async () => {
         try {
-          const data = await apiCall.fn(tokenAddress.value.trim());
+          const data = await apiCall.fn(tokenAddress.value.trim(), poolAddress, '');
           lastFetchedTokenData.value = data;
           isLoading.value = false;
           statusMessage.value = 'API calls completed.';
           messageDisplay.value?.logMessage('API calls completed.', 'info');
         } catch (error) {
           console.error(error);
-          messageDisplay.value?.logMessage(`Error: ${error.message}`, 'error');
+          messageDisplay.value?.logMessage(`Error: ${(error as any).message}`, 'error');
         }
       })();
     }
@@ -200,12 +233,13 @@ const stopAllLoops = () => {
     }
   }
   statusMessage.value = 'All loops stopped.';
-  const messageDisplay = ref<MessageDisplay>();
+  const messageDisplay = ref<typeof MessageDisplay>();
   messageDisplay.value?.logMessage('All loops stopped.', 'info');
 };
 
 const toggleLoop = (loop: any) => {
-  const messageDisplay = ref<MessageDisplay>();
+  const messageDisplay = ref<typeof MessageDisplay>();
+  const poolAddress = ''; // Define poolAddress here
   if (loop.isLooping) {
     loop.stopLoop?.();
     loop.isLooping = false;
@@ -213,7 +247,8 @@ const toggleLoop = (loop: any) => {
   } else {
     loop.stopLoop = runWithInterval(async () => {
       try {
-        await apiCalls.find(apiCall => apiCall.name === loop.apiCall)?.fn(loop.token);
+        const owner = ''; // Define owner here
+        await apiCalls.find(apiCall => apiCall.name === loop.apiCall)?.fn(loop.token, poolAddress, owner);
       } catch (error) {
         console.error(error);
         messageDisplay.value?.logMessage(`Error: ${error.message}`, 'error');
