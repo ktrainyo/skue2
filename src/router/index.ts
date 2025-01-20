@@ -6,15 +6,4 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach(async (to, from, next) => {
-  try {
-    // Perform async operations if needed
-    await someAsyncCheck();
-    next();
-  } catch (err) {
-    console.error('Navigation error:', err);
-    next(false); // Prevent navigation
-  }
-});
-
 export default router;

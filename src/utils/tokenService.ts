@@ -9,6 +9,191 @@ const headers = {
   'Accept': 'application/json'
 };
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const MAX_RETRIES = 3;
+
+async function processToken(tokenData: any, retryCount = 0) {
+  try {
+    console.log(`Inserting token with mint address ${tokenData.token.mint}...`);
+    
+    // First, check if token already exists
+    const { data: existingToken, error: checkError } = await supabase
+      .from('new_token_data')
+      .select('id')
+      .eq('mint_address_new', tokenData.token.mint)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw new Error(`Token check failed: ${checkError.message}`);
+    }
+
+    let tokenId: number;
+
+    if (existingToken) {
+      // Update existing token
+      tokenId = existingToken.id;
+      const { error: updateError } = await supabase
+        .from('new_token_data')
+        .update({
+          name: tokenData.token.name,
+          symbol: tokenData.token.symbol,
+          uri: tokenData.token.uri,
+          decimals: tokenData.token.decimals,
+          image: tokenData.token.image,
+          description: tokenData.token.description,
+          has_file_metadata: tokenData.token.hasFileMetaData,
+          twitter: tokenData.token.twitter,
+          telegram: tokenData.token.telegram,
+          website: tokenData.token.website,
+          show_name: tokenData.token.showName,
+          updated_at: new Date().toISOString(),
+          processed: false
+        })
+        .eq('id', tokenId);
+
+      if (updateError) throw new Error(`Token update failed: ${updateError.message}`);
+    } else {
+      // Insert new token
+      const { data: insertData, error: insertError } = await supabase
+        .from('new_token_data')
+        .insert({
+          mint_address_new: tokenData.token.mint,
+          name: tokenData.token.name,
+          symbol: tokenData.token.symbol,
+          uri: tokenData.token.uri,
+          decimals: tokenData.token.decimals,
+          image: tokenData.token.image,
+          description: tokenData.token.description,
+          has_file_metadata: tokenData.token.hasFileMetaData,
+          twitter: tokenData.token.twitter,
+          telegram: tokenData.token.telegram,
+          website: tokenData.token.website,
+          show_name: tokenData.token.showName,
+          created_at: new Date().toISOString(),
+          processed: false
+        })
+        .select('id')
+        .single();
+
+      if (insertError) throw new Error(`Token insertion failed: ${insertError.message}`);
+      if (!insertData) throw new Error('No data returned from token insertion');
+      
+      tokenId = insertData.id;
+    }
+
+    // Process related data
+    await Promise.all([
+      processTokenPools(tokenData.pools, tokenId),
+      processTokenRisks(tokenData.risk, tokenId),
+      processTokenEvents(tokenData.events, tokenId)
+    ]);
+
+    return tokenId;
+  } catch (error) {
+    if (retryCount < MAX_RETRIES) {
+      console.warn(`Retry ${retryCount + 1} for token ${tokenData.token.mint}`);
+      await delay(1000 * (retryCount + 1));
+      return processToken(tokenData, retryCount + 1);
+    }
+    throw error;
+  }
+}
+
+async function processTokenPools(pools: any[], tokenId: number) {
+  if (!pools?.length) return;
+  
+  console.log('Processing pools for token ID:', tokenId);
+  
+  for (const pool of pools) {
+    console.log('Processing pool:', {
+      poolId: pool.poolId,
+      tokenId: tokenId
+    });
+
+    const { error } = await supabase
+      .from('new_token_pools')
+      .upsert({
+        token_id: tokenId, // Link to parent token
+        pool_id: pool.poolId,
+        quote_liquidity: pool.liquidity?.quote,
+        usd_liquidity: pool.liquidity?.usd,
+        quote_price: pool.price?.quote,
+        usd_price: pool.price?.usd,
+        token_supply: pool.tokenSupply,
+        lp_burn: pool.lpBurn,
+        market_cap_quote: pool.marketCap?.quote,
+        market_cap_usd: pool.marketCap?.usd,
+        freeze_authority: pool.security?.freezeAuthority,
+        mint_authority: pool.security?.mintAuthority,
+        quote_token: pool.quoteToken,
+        market: pool.market,
+        curve_percentage: pool.curvePercentage,
+        curve_address: pool.curve,
+        last_updated: pool.lastUpdated,
+        created_at: pool.createdAt,
+        deployer: pool.deployer,
+        buys: pool.txns?.buys,
+        total_txns: pool.txns?.total,
+        volume: pool.txns?.volume,
+        sells: pool.txns?.sells,
+        open_time: pool.openTime
+      }, {
+        onConflict: 'pool_id' // Handle duplicates based on pool_id
+      })
+      .select(); // Add select() to see the complete response
+
+    if (error) {
+      console.error('Pool insertion error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw new Error(`Pool insertion failed: ${error.message}`);
+    }
+  }
+}
+
+async function processTokenEvents(events: any, tokenId: number) {
+  if (!events) return;
+
+  await Promise.all(Object.entries(events).map(async ([interval, event]: [string, any]) => {
+    const { error } = await supabase
+      .from('new_token_events')
+      .upsert({
+        token_id: tokenId,
+        interval: interval,
+        price_change_percentage: event.priceChangePercentage
+      }, {
+        onConflict: ['token_id', 'interval'] // Handle duplicates based on composite unique constraint
+      });
+
+    if (error) throw new Error(`Event insertion failed: ${error.message}`);
+  }));
+}
+
+async function processTokenRisks(riskData: any, tokenId: number) {
+  if (!riskData?.risks?.length) return;
+
+  await Promise.all(riskData.risks.map(async (risk: any) => {
+    const { error } = await supabase
+      .from('new_token_risks')
+      .upsert({
+        token_id: tokenId,
+        rugged: riskData.rugged,
+        risk_name: risk.name,
+        risk_description: risk.description,
+        risk_level: risk.level,
+        risk_score: risk.score,
+        overall_risk_score: riskData.score
+      }, {
+        onConflict: ['token_id', 'risk_name'] // Handle duplicates based on composite unique constraint
+      });
+
+    if (error) throw new Error(`Risk insertion failed: ${error.message}`);
+  }));
+}
+
 export const fetchTokenInfo = async (tokenAddress: string) => {
   try {
     const response = await axios.get(`${BASE_API_URL}/tokens/${tokenAddress}`, { headers });
@@ -18,10 +203,10 @@ export const fetchTokenInfo = async (tokenAddress: string) => {
     const riskData = response.data.risk;
 
     // Insert token data into Supabase
-    const { data, error } = await supabase
+    const { data: tokenDataResponse, error: tokenError } = await supabase
       .from('tokens')
       .upsert({
-        mint: tokenData.mint,
+        mint_address_new: tokenData.mint, // Updated column name
         name: tokenData.name,
         symbol: tokenData.symbol,
         uri: tokenData.uri,
@@ -35,11 +220,11 @@ export const fetchTokenInfo = async (tokenAddress: string) => {
         createdOn: new Date().toISOString()
       });
 
-    if (error) throw error;
+    if (tokenError) throw new Error(`Token insertion error: ${tokenError.message}`);
 
     // Insert pools data into Supabase
-    for (const pool of poolsData) {
-      const { data, error } = await supabase
+    const poolPromises = poolsData.map(pool => {
+      return supabase
         .from('pools')
         .upsert({
           liquidity: pool.liquidity,
@@ -52,40 +237,49 @@ export const fetchTokenInfo = async (tokenAddress: string) => {
           quoteToken: pool.quoteToken,
           decimals: pool.decimals,
           security: pool.security,
-          lastUpdated: new Date(pool.lastUpdated).toISOString(),
-          createdAt: new Date(pool.createdAt).toISOString(),
+          lastUpdated: pool.lastUpdated ? new Date(pool.lastUpdated).toISOString() : null,
+          createdAt: pool.createdAt ? new Date(pool.createdAt).toISOString() : null,
           poolId: pool.poolId
         });
+    });
 
-      if (error) throw error;
-    }
+    const poolResults = await Promise.all(poolPromises);
+    poolResults.forEach(({ error }) => {
+      if (error) throw new Error(`Pool insertion error: ${error.message}`);
+    });
 
     // Insert events data into Supabase
-    for (const [interval, event] of Object.entries(eventsData)) {
-      const eventData = { ...event, interval, token: tokenAddress };
-      const { data, error } = await supabase
+    const eventPromises = Object.entries(eventsData).map(([interval, event]) => {
+      return supabase
         .from('events')
-        .upsert(eventData);
+        .upsert({
+          interval,
+          ...event
+        });
+    });
 
-      if (error) throw error;
-    }
+    const eventResults = await Promise.all(eventPromises);
+    eventResults.forEach(({ error }) => {
+      if (error) throw new Error(`Event insertion error: ${error.message}`);
+    });
 
     // Insert risk data into Supabase
-    const { data: riskInsertData, error: riskInsertError } = await supabase
+    const { data: riskDataResponse, error: riskError } = await supabase
       .from('risks')
       .upsert({
+        token_id: riskData.token_id,
         rugged: riskData.rugged,
-        risks: riskData.risks,
-        score: riskData.score,
-        token: tokenAddress
+        risk_name: riskData.risk_name,
+        risk_description: riskData.risk_description,
+        risk_level: riskData.risk_level,
+        risk_score: riskData.risk_score,
+        overall_risk_score: riskData.overall_risk_score
       });
 
-    if (riskInsertError) throw riskInsertError;
+    if (riskError) throw new Error(`Risk insertion error: ${riskError.message}`);
 
-    return { tokenData, poolsData, eventsData, riskData };
   } catch (error) {
-    console.error('Error fetching token info:', error);
-    throw error;
+    console.error(`Failed to fetch and insert token info: ${error.message}`);
   }
 };
 
@@ -234,3 +428,128 @@ export const fetchTokenPriceAtTimestamp = async (tokenAddress: string, timestamp
     throw error;
   }
 };
+
+export const fetchAndInsertNewTokens = async () => {
+  try {
+    console.log('Fetching latest tokens from API...');
+    const response = await axios.get(`${BASE_API_URL}/tokens/latest`, { headers });
+    const tokens = Array.isArray(response.data) ? response.data : [response.data];
+    
+    console.log(`Fetched ${tokens.length} tokens`);
+
+    for (const tokenData of tokens) {
+      try {
+        if (!tokenData.token?.mint) {
+          console.warn('Skipping token with no mint address:', tokenData);
+          continue;
+        }
+
+        console.log(`Processing token: ${tokenData.token.mint}`);
+        
+        // Insert or update the token and get its ID
+        const tokenId = await insertNewToken(tokenData);
+        
+        // Process related data with the token ID
+        await Promise.all([
+          processTokenPools(tokenData.pools, tokenId),
+          processTokenEvents(tokenData.events, tokenId),
+          processTokenRisks(tokenData.risk, tokenId)
+        ]);
+
+        console.log(`Successfully processed token ${tokenData.token.mint}`);
+      } catch (err) {
+        console.error(`Error processing token ${tokenData.token?.mint}:`, err);
+        continue;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch and process tokens:', error);
+    throw error;
+  }
+};
+
+async function insertNewToken(tokenData: any) {
+  console.log('Attempting to insert token:', {
+    mint: tokenData.token.mint,
+    name: tokenData.token.name
+  });
+
+  // Enable Supabase query debugging
+  const { data, error, count, status, statusText, body } = await supabase
+    .from('new_token_data')
+    .insert({
+      mint_address_new: tokenData.token.mint,
+      name: tokenData.token.name,
+      symbol: tokenData.token.symbol,
+      uri: tokenData.token.uri,
+      decimals: tokenData.token.decimals,
+      image: tokenData.token.image,
+      description: tokenData.token.description,
+      has_file_metadata: tokenData.token.hasFileMetaData,
+      twitter: tokenData.token.twitter,
+      telegram: tokenData.token.telegram,
+      website: tokenData.token.website,
+      show_name: tokenData.token.showName,
+      created_at: new Date().toISOString(),
+      processed: false
+    })
+    .select('id')
+    .single();
+
+  // Log the complete response for debugging
+  console.log('Supabase response:', {
+    data,
+    error,
+    count,
+    status,
+    statusText,
+    body
+  });
+
+  if (error) {
+    console.error('Full error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    });
+    throw new Error(`Failed to insert token: ${error.message}`);
+  }
+
+  if (!data?.id) throw new Error('No ID returned from token insertion');
+
+  return data.id;
+}
+
+async function updateExistingToken(tokenId: number, tokenData: any) {
+  const { error } = await supabase
+    .from('new_token_data')
+    .update({
+      name: tokenData.token.name,
+      symbol: tokenData.token.symbol,
+      uri: tokenData.token.uri,
+      decimals: tokenData.token.decimals,
+      image: tokenData.token.image,
+      description: tokenData.token.description,
+      has_file_metadata: tokenData.token.hasFileMetaData,
+      twitter: tokenData.token.twitter,
+      telegram: tokenData.token.telegram,
+      website: tokenData.token.website,
+      show_name: tokenData.token.showName,
+      updated_at: new Date().toISOString(),
+      processed: false
+    })
+    .eq('id', tokenId);
+
+  if (error) throw new Error(`Failed to update token: ${error.message}`);
+
+  await processRelatedData(tokenId, tokenData);
+}
+
+async function processRelatedData(tokenId: number, tokenData: any) {
+  await Promise.allSettled([
+    processTokenPools(tokenData.pools, tokenId),
+    processTokenRisks(tokenData.risk, tokenId),
+    processTokenEvents(tokenData.events, tokenId)
+  ]);
+}

@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { hexToRgb } from '@/utils/helpers'
 import ScrollToTop from '@core/components/ScrollToTop.vue'
 import initCore from '@core/initCore'
 import { initConfigStore, useConfigStore } from '@core/stores/config'
-import { hexToRgb } from '@core/utils/colorConverter'
 import { useTheme } from 'vuetify'
 
 // Initialize core and configuration store

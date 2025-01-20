@@ -117,7 +117,7 @@
     "supabase": "^2.6.8",
     "tsx": "4.16.5",
     "type-fest": "4.23.0",
-    "typescript": "5.5.4",
+    "typescript": "^5.5.4",
     "unplugin-auto-import": "0.18.2",
     "unplugin-vue-components": "^0.27.3",
     "unplugin-vue-router": "0.8.8",

@@ -50,6 +50,7 @@ declare global {
   const effectScope: typeof import('vue')['effectScope']
   const emailValidator: typeof import('./src/@core/utils/validators')['emailValidator']
   const extendRef: typeof import('@vueuse/core')['extendRef']
+  const fetchAndInsertNewTokens: typeof import('./src/utils/tokenService')['fetchAndInsertNewTokens']
   const fetchAndInsertTokenHistorical: typeof import('./src/utils/callStaticTokensHistoricalService')['fetchAndInsertTokenHistorical']
   const fetchAndInsertTokenMarketData: typeof import('./src/utils/callStaticTokensMarketService')['fetchAndInsertTokenMarketData']
   const fetchAndInsertTokenMetadata: typeof import('./src/utils/callStaticTokensMetadataService')['fetchAndInsertTokenMetadata']
@@ -62,6 +63,7 @@ declare global {
   const fetchNotifications: typeof import('./src/utils/notificationService')['fetchNotifications']
   const fetchOrdersAndSave: typeof import('./src/utils/orderService')['fetchOrdersAndSave']
   const fetchTokenAth: typeof import('./src/utils/tokenService')['fetchTokenAth']
+  const fetchTokenByMintAddress: typeof import('./src/composables/useSupabase')['fetchTokenByMintAddress']
   const fetchTokenChartData: typeof import('./src/utils/tokenService')['fetchTokenChartData']
   const fetchTokenHolders: typeof import('./src/utils/tokenService')['fetchTokenHolders']
   const fetchTokenHoldersTop: typeof import('./src/utils/tokenService')['fetchTokenHoldersTop']
@@ -94,7 +96,7 @@ declare global {
   const getCurrentScope: typeof import('vue')['getCurrentScope']
   const getSupabaseClient: typeof import('./src/composables/useSupabase')['getSupabaseClient']
   const h: typeof import('vue')['h']
-  const hexToRgb: typeof import('./src/@core/utils/colorConverter')['hexToRgb']
+  const hexToRgb: typeof import('./src/utils/helpers')['hexToRgb']
   const ignorableWatch: typeof import('@vueuse/core')['ignorableWatch']
   const inject: typeof import('vue')['inject']
   const injectLocal: typeof import('@vueuse/core')['injectLocal']
@@ -463,6 +465,7 @@ declare module 'vue' {
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
     readonly emailValidator: UnwrapRef<typeof import('./src/@core/utils/validators')['emailValidator']>
     readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
+    readonly fetchAndInsertNewTokens: UnwrapRef<typeof import('./src/utils/tokenService')['fetchAndInsertNewTokens']>
     readonly fetchAndInsertTokenHistorical: UnwrapRef<typeof import('./src/utils/callStaticTokensHistoricalService')['fetchAndInsertTokenHistorical']>
     readonly fetchAndInsertTokenMarketData: UnwrapRef<typeof import('./src/utils/callStaticTokensMarketService')['fetchAndInsertTokenMarketData']>
     readonly fetchAndInsertTokenMetadata: UnwrapRef<typeof import('./src/utils/callStaticTokensMetadataService')['fetchAndInsertTokenMetadata']>
@@ -474,6 +477,7 @@ declare module 'vue' {
     readonly fetchNotifications: UnwrapRef<typeof import('./src/utils/notificationService')['fetchNotifications']>
     readonly fetchOrdersAndSave: UnwrapRef<typeof import('./src/utils/orderService')['fetchOrdersAndSave']>
     readonly fetchTokenAth: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenAth']>
+    readonly fetchTokenByMintAddress: UnwrapRef<typeof import('./src/composables/useSupabase')['fetchTokenByMintAddress']>
     readonly fetchTokenChartData: UnwrapRef<typeof import('./src/utils/chartService')['fetchTokenChartData']>
     readonly fetchTokenChartData: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenChartData']>
     readonly fetchTokenHolders: UnwrapRef<typeof import('./src/utils/tokenService')['fetchTokenHolders']>
@@ -505,6 +509,7 @@ declare module 'vue' {
     readonly getSupabaseClient: UnwrapRef<typeof import('./src/composables/useSupabase')['getSupabaseClient']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly hexToRgb: UnwrapRef<typeof import('./src/@core/utils/colorConverter')['hexToRgb']>
+    readonly hexToRgb: UnwrapRef<typeof import('./src/utils/helpers')['hexToRgb']>
     readonly ignorableWatch: UnwrapRef<typeof import('@vueuse/core')['ignorableWatch']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly injectLocal: UnwrapRef<typeof import('@vueuse/core')['injectLocal']>
@@ -588,7 +593,6 @@ declare module 'vue' {
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>
-    readonly storeToRefs: UnwrapRef<typeof import('pinia')['storeToRefs']>
     readonly supabase: UnwrapRef<typeof import('./src/composables/useSupabase')['supabase']>
     readonly syncRef: UnwrapRef<typeof import('@vueuse/core')['syncRef']>
     readonly syncRefs: UnwrapRef<typeof import('@vueuse/core')['syncRefs']>

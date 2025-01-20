@@ -1,3 +1,4 @@
+import GetNewTokensButton from '@/components/GetNewTokensButton.vue';
 import PrimeVue from 'primevue/config';
 import { createApp } from 'vue';
 import App from './App.vue';
@@ -5,13 +6,14 @@ import App from './App.vue';
 // Styles
 import '@core/scss/template/index.scss';
 import '@styles/styles.scss';
+import '@styles/token-table-list.css'; // Import custom styles
 
 // Create vue app
 const app = createApp(App);
 
 // Register plugins
 import { registerPlugins } from '@core/utils/plugins';
-registerPlugins(app);
+registerPlugins(app); // This already includes Pinia registration
 
 // Create an event bus
 import mitt from 'mitt';
@@ -19,6 +21,11 @@ const emitter = mitt();
 app.provide('emitter', emitter);
 
 app.use(PrimeVue);
+// Remove duplicate Pinia registration
+// app.use(pinia);
+
+// Register the new component
+app.component('GetNewTokensButton', GetNewTokensButton);
 
 // Mount vue app
 app.mount('#app');

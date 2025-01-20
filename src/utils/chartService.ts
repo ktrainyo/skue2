@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/composables/useSupabase';
 import axios from 'axios';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 const BASE_API_URL = 'https://data.solanatracker.io';
 const API_KEY = import.meta.env.VITE_SOLANA_TRACKER_API_KEY;

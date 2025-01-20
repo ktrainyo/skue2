@@ -56,21 +56,25 @@
 
     <!-- Timeframes Section -->
     <div class="timeframes-grid">
+      <div class="timeframe-box" :class="{ positive: tokenData['1M_percentage'] >= 0, negative: tokenData['1M_percentage'] < 0 }">
+        <span class="label">1min</span>
+        <span class="value">{{ tokenData['1M_percentage'] }}%</span>
+      </div>
       <div class="timeframe-box" :class="{ positive: tokenData['5M_percentage'] >= 0, negative: tokenData['5M_percentage'] < 0 }">
-        <span class="label">5M</span>
+        <span class="label">5min</span>
         <span class="value">{{ tokenData['5M_percentage'] }}%</span>
       </div>
       <div class="timeframe-box" :class="{ positive: tokenData['10M_percentage'] >= 0, negative: tokenData['10M_percentage'] < 0 }">
-        <span class="label">10M</span>
+        <span class="label">10min</span>
         <span class="value">{{ tokenData['10M_percentage'] }}%</span>
       </div>
-      <div class="timeframe-box" :class="{ positive: tokenData['15M_percentage'] >= 0, negative: tokenData['15M_percentage'] < 0 }">
-        <span class="label">15M</span>
-        <span class="value">{{ tokenData['15M_percentage'] }}%</span>
-      </div>
       <div class="timeframe-box" :class="{ positive: tokenData['30M_percentage'] >= 0, negative: tokenData['30M_percentage'] < 0 }">
-        <span class="label">30M</span>
+        <span class="label">30min</span>
         <span class="value">{{ tokenData['30M_percentage'] }}%</span>
+      </div>
+      <div class="timeframe-box" :class="{ positive: tokenData['12hr_percentage'] >= 0, negative: tokenData['12hr_percentage'] < 0 }">
+        <span class="label">12hr</span>
+        <span class="value">{{ tokenData['12hr_percentage'] }}%</span>
       </div>
     </div>
 
@@ -150,10 +154,11 @@ export default defineComponent({
         sell_volume: number;
         buyers: number;
         sellers: number;
+        '1M_percentage': number;
         '5M_percentage': number;
         '10M_percentage': number;
-        '15M_percentage': number;
         '30M_percentage': number;
+        '12hr_percentage': number;
       }>,
       required: true,
     },
@@ -301,7 +306,7 @@ export default defineComponent({
 }
 
 .timeframes-grid {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .transaction-details-grid {

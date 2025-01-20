@@ -118,19 +118,28 @@ export default defineComponent({
 
       const { data, error, count } = await supabase
         .from('token_overview')
-        .select('title, token, priceusd, marketcap, liquidity', { count: 'exact' })
-        .order('timestamp', { ascending: false })
-        .range(start, end);
+        .select('title, token, priceusd, marketcap, liquidity')
+        .order('timestamp', { ascending: false });
 
       if (error) {
         console.error('Error fetching tokens:', error.message);
       } else {
-        tokens.value = data.map((token: any) => ({
+        // Filter out duplicate tokens, keeping only the most recent entry for each token
+        const uniqueTokens = new Map();
+        data.forEach((token: any) => {
+          if (!uniqueTokens.has(token.token)) {
+            uniqueTokens.set(token.token, token);
+          }
+        });
+
+        const uniqueTokenArray = Array.from(uniqueTokens.values());
+
+        tokens.value = uniqueTokenArray.slice(start, end).map((token: any) => ({
           ...token,
           frequency: token.frequency || 60000, // Default frequency: 1 minute
           isPolling: token.isPolling || false, // Default polling state
         }));
-        totalRecords.value = count || 0;
+        totalRecords.value = uniqueTokenArray.length;
       }
     };
 
@@ -173,7 +182,11 @@ export default defineComponent({
       emit('tokenSelected', token);
     };
 
-    const formatCurrency = (value: number) => {
+    const formatCurrency = (value: number | null) => {
+      if (value === null) {
+        return "N/A";
+      }
+
       if (value < 1000) {
         return `$${value.toFixed(0)}`;
       } else {
@@ -181,7 +194,11 @@ export default defineComponent({
       }
     };
 
-    const formatPriceUSD = (value: number) => {
+    const formatPriceUSD = (value: number | null) => {
+      if (value === null) {
+        return "N/A";
+      }
+
       if (value === 0) {
         return "$0.0";
       }

@@ -1,0 +1,74 @@
+/* Custom styles for TokenTableList component */
+.token-table {
+  font-family: Roboto, sans-serif;
+  margin-block-end: 2rem;
+}
+
+.p-datatable-thead > tr > th {
+  padding: 1rem;
+  background-color: #030; /* Deep very dark green header */
+  border-block-end: 2px solid #020; /* Darker green separator */
+  color: #fff; /* White text */
+  font-size: 1rem;
+  text-align: start;
+  white-space: nowrap; /* Prevent word wrap */
+}
+
+.p-datatable-tbody > tr {
+  background-color: #1e1e1e; /* Dark theme background for all rows */
+  color: #fff; /* White text for all rows */
+}
+
+.p-datatable-tbody > tr:hover {
+  background-color: #333; /* Slightly lighter background on hover */
+}
+
+.p-datatable-tbody > tr > td {
+  padding: 0.875rem;
+  border-block-end: 1px solid #444; /* Subtle bottom border */
+  font-size: 0.95rem;
+}
+
+.name-column a,
+.address-column a {
+  color: #2196f3; /* Vibrant blue links */
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.name-column a:hover,
+.address-column a:hover {
+  color: #1565c0; /* Darker blue on hover */
+  text-decoration: underline;
+}
+
+.auto-update-column,
+.frequency-column {
+  text-align: center; /* Center-align switches and dropdowns */
+}
+
+.auto-update-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.p-datatable .p-paginator {
+  background-color: #1e1e1e; /* Dark theme paginator background */
+  border-block-start: 2px solid #444; /* Subtle border */
+  color: #fff; /* White text */
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page,
+.p-paginator .p-paginator-next,
+.p-paginator .p-paginator-prev {
+  color: #fff; /* White text */
+  font-size: 1.25rem; /* Bigger pagination numbers and buttons */
+  padding-block: 0.5rem;
+  padding-inline: 1rem; /* Bigger padding for pagination buttons */
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+  border-color: #020; /* Darker green border for active page */
+  background-color: #030; /* Deep very dark green for active page */
+}
