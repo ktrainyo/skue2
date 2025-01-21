@@ -57,7 +57,9 @@
     "types": [
       "vite/client",
       "unplugin-vue-router/client",
-      "vite-plugin-vue-layouts/client"
+      "vite-plugin-vue-layouts/client",
+      "vue",
+      "@vue/runtime-dom"
     ]
   },
   "include": [
@@ -69,10 +71,12 @@
     "./src/**/*.vue",
     "./themeConfig.ts",
     "./auto-imports.d.ts",
-    "./components.d.ts"
+    "./components.d.ts",
+    "src/**/*.ts",
+    "src/**/*.d.ts"
   ],
   "exclude": [
     "./dist",
     "./node_modules"
-  ]
+  ],
 }

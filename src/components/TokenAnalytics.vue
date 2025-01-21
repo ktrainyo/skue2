@@ -1,9 +1,10 @@
+
 <template>
   <!-- ...existing code... -->
   <ChartBase
-    :chartData="metricsChartData"
+    :chartData="analyticsData"
     :options="chartOptions"
-    :chartType="chartType"
+    :chartType="selectedChartType"
   />
   <!-- ...existing code... -->
 </template>

@@ -16,9 +16,7 @@ export const getSupabaseClient = (): SupabaseClient => {
     supabaseInstance = createClient(supabaseUrl, supabaseKey, {
       db: {
         schema: 'public'
-      },
-      // Add debug mode
-      debug: true
+      }
     });
 
     // Log all queries

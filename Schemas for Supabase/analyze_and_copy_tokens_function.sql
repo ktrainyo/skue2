@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION analyze_and_copy_tokens() RETURNS TRIGGER AS $$ BEGIN -- Step 1: Select qualified tokens
+CREATE OR REPLACE FUNCTION public.analyze_and_copy_tokens() RETURNS void AS $$ BEGIN -- Step 1: Select qualified tokens
     WITH qualified_tokens AS (
         SELECT t.id AS token_id,
             t.mint_address_new,
@@ -161,6 +161,6 @@ RAISE NOTICE 'Tokens processed: %',
     SELECT COUNT(*)
     FROM qualified_tokens
 );
-RETURN NEW;
+RETURN;
 END;
 $$ LANGUAGE plpgsql;

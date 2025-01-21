@@ -1,7 +1,8 @@
+
 <template>
   <!-- ...existing code... -->
   <ChartBase
-    :chartData="metricsChartData"
+    :chartData="chartData"
     :options="chartOptions"
     :chartType="chartType"
   />

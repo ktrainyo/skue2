@@ -1,0 +1,6 @@
+import { BaseApiService } from '@/core/api/BaseApiService';
+
+export class ApiService extends BaseApiService {
+  // ...existing specialized methods, e.g. fetchUsers, fetchOrders...
+  // ...they can call this.get, this.post, etc. from BaseApiService...
+}

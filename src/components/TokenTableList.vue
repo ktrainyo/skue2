@@ -85,7 +85,7 @@
 
 <script lang="ts">
 import { getSupabaseClient } from '@/composables/useSupabase';
-import { fetchTokenChartData, fetchTokenPriceAtTimestamp } from '@/services/tokenService';
+import { fetchTokenChartData } from '@/services/TokenService';
 import Select from 'primevue/select';
 import ToggleSwitch from 'primevue/toggleswitch';
 import { defineComponent, onMounted, ref } from 'vue';
@@ -159,7 +159,7 @@ export default defineComponent({
       stopPolling(token);
       token.timer = setInterval(async () => {
         await fetchTokenChartData(token.token);
-        await fetchTokenPriceAtTimestamp(token.token, new Date().toISOString());
+        await fetchTokenPriceAtTimestamp(token.token, Date.now());
       }, token.frequency);
     };
 

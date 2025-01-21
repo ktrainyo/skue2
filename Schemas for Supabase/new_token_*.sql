@@ -14,7 +14,7 @@ create table public.new_token_data (
   website text null,
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
-  processed boolean null default false,
+  qualified boolean null default false,
   mint_address_new text null,
   constraint new_token_data_pkey primary key (id)
 ) tablespace pg_default;

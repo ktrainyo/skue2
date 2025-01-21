@@ -79,7 +79,7 @@ import MessageDisplay from '@/components/MessageDisplay.vue';
 import TokenOverviewDirect from '@/components/TokenOverviewDirect.vue';
 import TokenTableList from '@/components/TokenTableList.vue';
 import { getSupabaseClient } from '@/composables/useSupabase';
-import { fetchTokenAth, fetchTokenChartData, fetchTokenHolders, fetchTokenHoldersTop, fetchTokenInfo, fetchTokenPriceAtTimestamp } from '@/services/tokenService';
+import { fetchTokenAth, fetchTokenChartData, fetchTokenHolders, fetchTokenHoldersTop, fetchTokenInfo, fetchTokenPriceAtTimestamp } from '@/services/TokenService';
 import { fetchTokenPrice, fetchTokenPriceHistory } from '@/utils/priceService';
 import { runWithInterval } from '@/utils/taskRunner';
 import { fetchTokenPoolOwnerTrades, fetchTokenPoolTrades, fetchTokenTrades } from '@/utils/tradeService';
@@ -251,7 +251,7 @@ const toggleLoop = (loop: any) => {
         await apiCalls.find(apiCall => apiCall.name === loop.apiCall)?.fn(loop.token, poolAddress, owner);
       } catch (error) {
         console.error(error);
-        messageDisplay.value?.logMessage(`Error: ${error.message}`, 'error');
+        messageDisplay.value?.logMessage(`Error: ${(error as any).message}`, 'error');
       }
     }, loopInterval.value);
     loop.isLooping = true;
@@ -265,7 +265,7 @@ const removeLoop = (loopId: number) => {
     const loop = loops.value[loopIndex];
     loop.stopLoop?.();
     loops.value.splice(loopIndex, 1);
-    const messageDisplay = ref<MessageDisplay>();
+    const messageDisplay = ref<typeof MessageDisplay>();
     messageDisplay.value?.logMessage(`Loop for ${loop.apiCall} removed.`, 'info');
   }
 };
@@ -287,18 +287,17 @@ watch(tokenAddress, async () => {
 <style scoped>
 .container {
   padding: 1rem;
+  inline-size: 100%; /* Ensure the container takes up the full width */
   margin-block: 0;
   margin-inline: auto;
-  max-inline-size: 800px;
 }
 
 .token-input {
   display: block;
   padding: 0.5rem;
   font-size: 1rem;
-  inline-size: 100%;
+  inline-size: 100%; /* Ensure the input takes up the full width */
   margin-block-end: 1rem;
-  max-inline-size: 300px;
 }
 
 .buttons-container {
@@ -345,7 +344,7 @@ watch(tokenAddress, async () => {
 
 table {
   border-collapse: collapse;
-  inline-size: 100%;
+  inline-size: 100%; /* Ensure the table takes up the full width */
 }
 
 th,

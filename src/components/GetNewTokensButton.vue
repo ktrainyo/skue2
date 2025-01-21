@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { fetchAndInsertNewTokens } from '@/services/tokenService';
+import { fetchAndInsertNewTokens } from '@/services/TokenService';
 import { useTokenStore } from '@/stores/token';
 import { computed, ref } from 'vue';
 

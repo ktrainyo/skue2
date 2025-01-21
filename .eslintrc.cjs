@@ -13,6 +13,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:case-police/recommended',
     'plugin:regexp/recommended',
+    'plugin:vuejs-accessibility/recommended', // Added
 
     // 'plugin:unicorn/recommended',
   ],
@@ -27,6 +28,7 @@ module.exports = {
     '@typescript-eslint',
     'regex',
     'regexp',
+    'vue-scoped-css', // Added
   ],
   ignorePatterns: ['src/plugins/iconify/*.js', 'node_modules', 'dist', '*.d.ts', 'vendor', '*.json'],
   rules: {
@@ -106,10 +108,16 @@ module.exports = {
     // Plugin: eslint-plugin-import
     'import/prefer-default-export': 'off',
     'import/newline-after-import': ['error', { count: 1 }],
-    'no-restricted-imports': ['error', 'vuetify/components', {
-      name: 'vue3-apexcharts',
-      message: 'apexcharts are auto imported',
-    }],
+    'no-restricted-imports': ['error',
+      'vuetify/components',
+      {
+        name: 'vue3-apexcharts',
+        message: 'apexcharts are auto imported',
+      },
+      {
+        name: 'primevue/components', // Added
+        message: 'Use PrimeVue auto-imports instead.',
+      }],
 
     // For omitting extension for ts files
     'import/extensions': [
@@ -218,7 +226,7 @@ module.exports = {
         },
         {
           regex: 'useLayouts\\(',
-          message: '`useLayouts` composable is only allowed in @layouts & @core directory. Please use `useThemeConfig` composable instead.',
+          message: '`useLayouts` composable is only allowed in @core & @layouts directory. Please use `useThemeConfig` composable instead.',
           files: {
             inspect: '^(?!.*(@core|@layouts)).*',
           },
@@ -228,11 +236,26 @@ module.exports = {
       // Ignore files
       '\.eslintrc\.cjs',
     ],
+
+    // Added auto-import compatibility
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        varsIgnorePattern: '^[A-Z]', // auto-imported components
+        argsIgnorePattern: '^_',
+      },
+    ],
+
+    // Vue-scoped-css plugin configuration
+    'vue-scoped-css/enforce-style-type': ['error', { allowUnscoped: false }],
   },
   settings: {
     'import/resolver': {
       node: true,
-      typescript: {},
+      typescript: {
+        project: './tsconfig.json', // Added
+      },
     },
   },
 }

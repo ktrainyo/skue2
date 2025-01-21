@@ -89,7 +89,8 @@ export const fetchAndInsertTokenMetadata = async (tokenAddress: string): Promise
     console.log(`[SERVICE] Supabase Insert/Update Success:`, data);
     return data;
   } catch (error) {
-    console.error(`[SERVICE] Error fetching or inserting token metadata:`, error.message);
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    console.error(`[SERVICE] Error fetching or inserting token metadata:`, errorMessage)
+    throw error
   }
 };
