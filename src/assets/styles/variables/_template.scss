@@ -1,6 +1,5 @@
-@forward "@core/scss/template/variables";
+@forward "../../../@core/scss/template/variables" with (
+  $navbar-high-emphasis-text: true
+);
 
-// ℹ️ Remove above import and uncomment below to override core variables.
-// @forward "@core/scss/template/variables" with (
-//   $<variable-name>: <variable-value>
-// )
+// Add any custom variable overrides here

@@ -1,5 +1,7 @@
-import { supabase } from '@/composables/useSupabase';
+import { getSupabaseClient } from '@/composables/useSupabase';
 import axios from 'axios';
+
+const supabase = getSupabaseClient();
 
 const BASE_API_URL = 'https://data.solanatracker.io';
 const API_KEY = import.meta.env.VITE_SOLANA_TRACKER_API_KEY;
@@ -18,7 +20,7 @@ export const fetchTokenTrades = async (tokenAddress: string) => {
     for (const trade of tokenTradesData) {
       const { data, error } = await supabase
         .from('token_trades')
-        .upsert({ ...trade, token: tokenAddress, pools: trade.pools });
+        .upsert({ ...trade, token: tokenAddress });
 
       if (error) throw error;
     }
@@ -39,7 +41,18 @@ export const fetchTokenPoolTrades = async (tokenAddress: string, poolAddress: st
     for (const trade of tokenPoolTradesData) {
       const { data, error } = await supabase
         .from('token_pool_trades')
-        .upsert({ ...trade, token: tokenAddress, pool: poolAddress, pools: trade.pools });
+        .upsert({
+          tx: trade.tx,
+          token: tokenAddress,
+          pool: poolAddress,
+          amount: trade.amount,
+          priceUsd: trade.priceUsd,
+          volume: trade.volume,
+          type: trade.type,
+          wallet: trade.wallet,
+          time: trade.time,
+          program: trade.program
+        });
 
       if (error) throw error;
     }
@@ -47,27 +60,6 @@ export const fetchTokenPoolTrades = async (tokenAddress: string, poolAddress: st
     return tokenPoolTradesData;
   } catch (error) {
     console.error('Error fetching token pool trades:', error);
-    throw error;
-  }
-};
-
-export const fetchTokenPoolOwnerTrades = async (tokenAddress: string, poolAddress: string, owner: string) => {
-  try {
-    const response = await axios.get(`${BASE_API_URL}/trades/${tokenAddress}/${poolAddress}/${owner}`, { headers });
-    const tokenPoolOwnerTradesData = response.data.trades;
-
-    // Insert token pool owner trades data into Supabase
-    for (const trade of tokenPoolOwnerTradesData) {
-      const { data, error } = await supabase
-        .from('token_pool_owner_trades')
-        .upsert({ ...trade, token: tokenAddress, pool: poolAddress, owner, pools: trade.pools });
-
-      if (error) throw error;
-    }
-
-    return tokenPoolOwnerTradesData;
-  } catch (error) {
-    console.error('Error fetching token pool owner trades:', error);
     throw error;
   }
 };

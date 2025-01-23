@@ -31,6 +31,7 @@ declare module 'vue-router/auto-routes' {
     'token-meta-page': RouteRecordInfo<'token-meta-page', '/TokenMetaPage', Record<never, never>, Record<never, never>>,
     'token-page': RouteRecordInfo<'token-page', '/TokenPage', Record<never, never>, Record<never, never>>,
     'token-page-backup': RouteRecordInfo<'token-page-backup', '/TokenPage-backup', Record<never, never>, Record<never, never>>,
+    'token-tracker': RouteRecordInfo<'token-tracker', '/TokenTracker', Record<never, never>, Record<never, never>>,
     'token-volume-page': RouteRecordInfo<'token-volume-page', '/TokenVolumePage', Record<never, never>, Record<never, never>>,
     'volume-page': RouteRecordInfo<'volume-page', '/volume-page', Record<never, never>, Record<never, never>>,
   }

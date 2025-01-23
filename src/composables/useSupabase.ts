@@ -35,6 +35,9 @@ export const getSupabaseClient = (): SupabaseClient => {
 
 export const supabase = getSupabaseClient();
 
+// Export useSupabase for compatibility
+export const useSupabase = () => supabase;
+
 export async function fetchMostRecentTokenData() {
   const { data, error } = await supabase
     .from('token_overview')

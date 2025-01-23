@@ -1,5 +1,26 @@
+import TokenApiTester from '@/pages/TokenApiTester.vue';
+import TokenTracker from '@/pages/TokenTracker.vue';
+import Home from '@/views/Home.vue';
 import { createRouter, createWebHistory } from 'vue-router';
-import routes from './routes';
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home,
+  },
+  {
+    path: '/token-api-tester',
+    name: 'TokenApiTester',
+    component: TokenApiTester,
+  },
+  {
+    path: '/token-tracker',
+    name: 'TokenTracker',
+    component: TokenTracker,
+  },
+  // ...other routes...
+];
 
 const router = createRouter({
   history: createWebHistory(),

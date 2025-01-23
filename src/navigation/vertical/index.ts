@@ -5,8 +5,13 @@ export default [
     icon: { icon: 'tabler-smart-home' },
   },
   {
-    title: 'Second page',
-    to: { name: 'second-page' },
+    title: 'Token API Tester',
+    to: { name: 'token-api-tester' },
+    icon: { icon: 'tabler-file' },
+  },
+  {
+    title: 'Token Tracker',
+    to: { name: 'token-tracker' },
     icon: { icon: 'tabler-file' },
   },
 ]
