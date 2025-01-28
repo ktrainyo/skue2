@@ -38,32 +38,41 @@
           <template #header.priceQuote>
             <strong>Price Quote</strong>
           </template>
+          <!-- Custom rendering for Token -->
+          <template #item.token="{ item }">
+            <span class="token-address" @click="copyToClipboard(item.token)">
+              {{ item.token }}
+            </span>
+          </template>
           <!-- Custom rendering for Price USD -->
           <template #item.price="{ item }">
-            <span v-html="$formatPrice(item.price ?? 0)"></span>
+            <span v-html="formatPrice(item.price ?? 0)"></span>
           </template>
 
           <!-- Dynamically calculated Price SOL -->
           <template #item.priceSol="{ item }">
-            <span v-html="$formatPrice(item.priceSol ?? 0)"></span>
+            <span v-html="formatPrice(item.priceSol ?? 0)"></span>
           </template>
 
           <!-- Other custom cells -->
           <template #item.liquidity="{ item }">
-            <span v-html="$formatPrice(item.liquidity ?? 0)"></span>
+            <span v-html="formatPrice(item.liquidity ?? 0)"></span>
           </template>
           <template #item.marketCap="{ item }">
-            <span v-html="$formatPrice(item.marketCap ?? 0)"></span>
+            <span v-html="formatPrice(item.marketCap ?? 0)"></span>
           </template>
           <template #item.lastUpdated="{ item }">
             {{ formatDatePST(item.lastUpdated) }}
           </template>
           <template #item.priceQuote="{ item }">
-            <span v-html="$formatPrice(item.priceQuote ?? 0)"></span>
+            <span v-html="formatPrice(item.priceQuote ?? 0)"></span>
           </template>
         </v-data-table>
       </template>
     </SupabaseRealtimeDisplay>
+    <v-snackbar v-model="snackbar" :timeout="2000">{{
+      snackbarMessage
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -71,13 +80,15 @@
 import { defineComponent, ref, PropType } from "vue";
 import SupabaseRealtimeDisplay from "@/components/SupabaseRealtimeDisplay.vue";
 import { solPrice } from "@/components/data-fetchers/SolUsdTicker.vue";
-import { VDataTable } from "vuetify/components";
+import { VDataTable, VSnackbar } from "vuetify/components";
+import { formatPrice } from "@/plugins/3.priceFormatter"; // Import the formatPrice function
 
 export default defineComponent({
   name: "LatestTokenPricesTable",
   components: {
     SupabaseRealtimeDisplay,
     VDataTable,
+    VSnackbar,
   },
   props: {
     selectedTokens: {
@@ -90,6 +101,8 @@ export default defineComponent({
     const currentPage = ref(1);
     const itemsPerPage = 10;
     const latestTokenPrices = ref<any[]>([]);
+    const snackbar = ref(false);
+    const snackbarMessage = ref("");
 
     const headers = [
       { text: "Token", value: "token" },
@@ -123,7 +136,7 @@ export default defineComponent({
     };
 
     const formatDatePST = (date: string) => {
-      const options = {
+      const options: Intl.DateTimeFormatOptions = {
         timeZone: "America/Los_Angeles",
         year: "numeric",
         month: "2-digit",
@@ -167,6 +180,27 @@ export default defineComponent({
       emit("update:selectedTokens", tokenAddresses);
     };
 
+    const copyToClipboard = (text: string) => {
+      if (!navigator.clipboard) {
+        console.error("Clipboard API not available");
+        snackbarMessage.value = "Clipboard API not available";
+        snackbar.value = true;
+        return;
+      }
+
+      navigator.clipboard.writeText(text).then(
+        () => {
+          snackbarMessage.value = "Copied";
+          snackbar.value = true;
+        },
+        (err) => {
+          console.error("Could not copy text: ", err);
+          snackbarMessage.value = "Failed to copy";
+          snackbar.value = true;
+        }
+      );
+    };
+
     return {
       currentPage,
       itemsPerPage,
@@ -177,6 +211,10 @@ export default defineComponent({
       latestTokenPrices,
       headers,
       updateSelectedTokens,
+      formatPrice,
+      copyToClipboard,
+      snackbar,
+      snackbarMessage,
     };
   },
 });
@@ -196,6 +234,11 @@ export default defineComponent({
 
 button {
   margin: 0 5px;
+}
+
+.token-address {
+  font-size: 8px;
+  cursor: pointer;
 }
 
 sub {

@@ -98,7 +98,9 @@ export default defineComponent({
             const response = await getTokenData(token);
             console.log("Fetched token data:", response);
           } catch (error) {
-            console.error("Error fetching token data:", error.message);
+            if (error instanceof Error) {
+              console.error("Error fetching token data:", error);
+            }
           }
         }
 
@@ -128,7 +130,11 @@ export default defineComponent({
         const response = await getSingleTokenPrice(tokens[0]);
         console.log(response);
       } catch (error) {
-        console.error("Error fetching single token price:", error.message);
+        if (error instanceof Error) {
+          console.error("Error fetching single token price:", error.message);
+        } else {
+          console.error("Error fetching single token price:", error);
+        }
       }
     };
 
@@ -160,7 +166,11 @@ export default defineComponent({
         const response = await getMultiTokenPrices(tokens);
         console.log(response);
       } catch (error) {
-        console.error("Error fetching multi-token prices:", error.message);
+        if (error instanceof Error) {
+          console.error("Error fetching multi-token prices:", error.message);
+        } else {
+          console.error("Error fetching multi-token prices:", error);
+        }
       }
     };
 
@@ -177,7 +187,11 @@ export default defineComponent({
         const response = await getTokenTrades(tokens[0]);
         console.log(response);
       } catch (error) {
-        console.error("Error fetching token trades:", error.message);
+        if (error instanceof Error) {
+          console.error("Error fetching token trades:", error.message);
+        } else {
+          console.error("Error fetching token trades:", error);
+        }
       }
     };
 
@@ -194,7 +208,11 @@ export default defineComponent({
         const response = await getFirstBuyers(tokens[0]);
         console.log(response);
       } catch (error) {
-        console.error("Error fetching first buyers:", error.message);
+        if (error instanceof Error) {
+          console.error("Error fetching first buyers:", error.message);
+        } else {
+          console.error("Error fetching first buyers:", error);
+        }
       }
     };
 
