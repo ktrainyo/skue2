@@ -64,6 +64,7 @@ import { getMultiTokenPrices } from "@/components/services/middleware/getMultiTo
 import { getTokenData } from "@/components/services/middleware/getTokenData";
 import { getTokenTrades } from "@/components/services/middleware/getTokenTrades";
 import { getFirstBuyers } from "@/components/services/middleware/getFirstBuyers";
+import { useSupabase } from "@/composables/useSupabase";
 
 export default defineComponent({
   name: "ThirdPage",
@@ -74,10 +75,33 @@ export default defineComponent({
   setup() {
     const tokensInput = ref("");
     const selectedTokens = ref<string[]>([]);
+    const supabase = useSupabase();
 
-    const addToken = () => {
+    const addToken = async () => {
       const token = tokensInput.value.trim();
       if (token && !selectedTokens.value.includes(token)) {
+        const { data, error } = await supabase
+          .from("tokens")
+          .select("*")
+          .eq("mint", token);
+
+        if (error) {
+          console.error("Error checking token existence:", error.message);
+          return;
+        }
+
+        if (data.length === 0) {
+          console.log(
+            "Token not found in tokens table, fetching token data..."
+          );
+          try {
+            const response = await getTokenData(token);
+            console.log("Fetched token data:", response);
+          } catch (error) {
+            console.error("Error fetching token data:", error.message);
+          }
+        }
+
         selectedTokens.value.push(token);
         tokensInput.value = "";
       }
