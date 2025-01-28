@@ -1,6 +1,6 @@
 <template>
   <div class="supabase-realtime-display">
-    <slot :fetchedData="fetchedData"></slot>
+    <slot :latestTokenPrices="latestTokenPrices"></slot>
   </div>
 </template>
 
@@ -20,7 +20,7 @@ export default defineComponent({
   emits: ["data-updated"],
   setup(props, { emit }) {
     const supabase = useSupabase();
-    const fetchedData = ref<any[]>([]);
+    const latestTokenPrices = ref<any[]>([]);
     const channelRef = ref<any>(null);
 
     onMounted(() => {
@@ -40,8 +40,8 @@ export default defineComponent({
       if (error) {
         console.error("Error fetching initial data:", error.message);
       } else {
-        fetchedData.value = data ?? [];
-        emit("data-updated", fetchedData.value);
+        latestTokenPrices.value = data ?? [];
+        emit("data-updated", latestTokenPrices.value);
       }
     };
 
@@ -68,30 +68,30 @@ export default defineComponent({
       console.log("Realtime payload:", payload); // Add this line
       switch (payload.eventType) {
         case "INSERT":
-          fetchedData.value.push(payload.new);
+          latestTokenPrices.value.push(payload.new);
           break;
 
         case "UPDATE": {
-          const idx = fetchedData.value.findIndex(
-            (item) => item.id === payload.old.id
+          const idx = latestTokenPrices.value.findIndex(
+            (item) => item.token === payload.old.token
           );
           if (idx !== -1) {
-            fetchedData.value[idx] = payload.new;
+            latestTokenPrices.value[idx] = payload.new;
           }
           break;
         }
 
         case "DELETE":
-          fetchedData.value = fetchedData.value.filter(
-            (item) => item.id !== payload.old.id
+          latestTokenPrices.value = latestTokenPrices.value.filter(
+            (item) => item.token !== payload.old.token
           );
           break;
       }
-      emit("data-updated", fetchedData.value);
+      emit("data-updated", latestTokenPrices.value);
     };
 
     return {
-      fetchedData,
+      latestTokenPrices,
     };
   },
 });

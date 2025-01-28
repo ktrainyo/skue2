@@ -1,74 +1,107 @@
 <template>
   <div class="latest-token-prices-table">
     <h3>Latest Token Prices</h3>
-    <supabase-realtime-display
-      tableName="latest_token_prices"
+    <SupabaseRealtimeDisplay
+      table-name="latest_token_prices"
       @data-updated="refreshData"
     >
-      <template #default="{ fetchedData }">
-        <v-simple-table>
-          <thead>
-            <tr>
-              <th>Token</th>
-              <th>Price USD</th>
-              <th>Price SOL</th>
-              <th>Liquidity</th>
-              <th>Market Cap</th>
-              <th>Last Updated</th>
-              <th>Price Quote</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="token in uniqueTokens(fetchedData)"
-              :key="token.token"
-              @click="emitTokenClick(token.token)"
-            >
-              <td>{{ token.token }}</td>
-              <td v-html="'$' + $formatPrice(token.price ?? 0)"></td>
-              <td v-html="$formatPrice(convertToSol(token.price ?? 0))"></td>
-              <td v-html="$formatPrice(token.liquidity ?? 0)"></td>
-              <td v-html="$formatPrice(token.marketCap ?? 0)"></td>
-              <td>{{ formatDate(token.lastUpdated) }}</td>
-              <td v-html="$formatPrice(token.priceQuote ?? 0)"></td>
-            </tr>
-          </tbody>
-        </v-simple-table>
-        <div class="pagination">
-          <button :disabled="currentPage === 1" @click="currentPage--">
-            Previous
-          </button>
-          <span>Page {{ currentPage }} of {{ totalPages(fetchedData) }}</span>
-          <button
-            :disabled="currentPage === totalPages(fetchedData)"
-            @click="currentPage++"
-          >
-            Next
-          </button>
-        </div>
+      <template #default="{ latestTokenPrices }">
+        <v-data-table
+          :headers="headers"
+          :items="uniqueTokens(latestTokenPrices)"
+          density="compact"
+          :items-per-page="itemsPerPage"
+          :page.sync="currentPage"
+          @click:row="openDialog"
+        >
+          <template #header.token>
+            <strong>Token Addrs</strong>
+          </template>
+          <template #header.price>
+            <strong>Price USD</strong>
+          </template>
+          <template #header.priceSol>
+            <strong>Price SOL</strong>
+          </template>
+          <template #header.liquidity>
+            <strong>Liquidity</strong>
+          </template>
+          <template #header.marketCap>
+            <strong>MarketCap</strong>
+          </template>
+          <template #header.lastUpdated>
+            <strong>Updated On</strong>
+          </template>
+          <template #header.priceQuote>
+            <strong>pRICEqUOTE</strong>
+          </template>
+          <!-- Custom rendering for Price USD -->
+          <template #item.price="{ item }">
+            <span v-html="$formatPrice(item.price ?? 0)"></span>
+          </template>
+
+          <!-- Dynamically calculated Price SOL -->
+          <template #item.priceSol="{ item }">
+            <span v-html="$formatPrice(item.priceSol ?? 0)"></span>
+          </template>
+
+          <!-- Other custom cells -->
+          <template #item.liquidity="{ item }">
+            <span v-html="$formatPrice(item.liquidity ?? 0)"></span>
+          </template>
+          <template #item.marketCap="{ item }">
+            <span v-html="$formatPrice(item.marketCap ?? 0)"></span>
+          </template>
+          <template #item.lastUpdated="{ item }">
+            {{ formatDatePST(item.lastUpdated) }}
+          </template>
+          <template #item.priceQuote="{ item }">
+            <span v-html="$formatPrice(item.priceQuote ?? 0)"></span>
+          </template>
+        </v-data-table>
+        <TokenDialog
+          :token="selectedToken"
+          :isDialogOpen="isDialogOpen"
+          @add-token="addTokenToSelection"
+          @close-dialog="closeDialog"
+        />
       </template>
-    </supabase-realtime-display>
+    </SupabaseRealtimeDisplay>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from "vue";
+import { defineComponent, ref } from "vue";
 import SupabaseRealtimeDisplay from "@/components/SupabaseRealtimeDisplay.vue";
 import { solPrice } from "@/components/data-fetchers/SolUsdTicker.vue";
-import { VSimpleTable } from "vuetify/components";
+import { VDataTable } from "vuetify/components";
+import TokenDialog from "@/components/tables/TokenDialog.vue";
+import { makeVFieldProps } from "vuetify/lib/components/VField/VField";
+import { paginationMeta } from "../../utils/paginationMeta";
 
 export default defineComponent({
   name: "LatestTokenPricesTable",
   components: {
     SupabaseRealtimeDisplay,
-    VSimpleTable,
+    VDataTable,
+    TokenDialog,
   },
   setup(_, { emit }) {
     const currentPage = ref(1);
     const itemsPerPage = 10;
-    const fetchedData = ref<any[]>([]);
+    const latestTokenPrices = ref<any[]>([]);
+    const isDialogOpen = ref(false);
+    const selectedToken = ref("");
 
-    const totalPages = (data: any[]) => Math.ceil(data.length / itemsPerPage);
+    const headers = [
+      { text: "Token", value: "token" },
+      { text: "Price USD", value: "price" },
+      { text: "Price SOL", value: "priceSol" },
+      { text: "Liquidity", value: "liquidity" },
+      { text: "Market Cap", value: "marketCap" },
+      { text: "Last Updated", value: "lastUpdated" },
+      { text: "Price Quote", value: "priceQuote" },
+    ];
 
     const uniqueTokens = (data: any[]) => {
       const tokenMap = new Map();
@@ -78,47 +111,75 @@ export default defineComponent({
           new Date(token.lastUpdated) >
             new Date(tokenMap.get(token.token).lastUpdated)
         ) {
-          tokenMap.set(token.token, token);
+          // Calculate priceSol and add it to each token
+          tokenMap.set(token.token, {
+            ...token,
+            priceSol: convertToSol(token.price ?? 0),
+          });
         }
       });
-      const sortedTokens = Array.from(tokenMap.values())
-        .sort(
-          (a, b) =>
-            new Date(b.lastUpdated).getTime() -
-            new Date(a.lastUpdated).getTime()
-        )
-        .slice(
-          (currentPage.value - 1) * itemsPerPage,
-          currentPage.value * itemsPerPage
-        );
-
-      console.log("Unique tokens after processing:", sortedTokens); // Add this log
-      return sortedTokens;
+      return Array.from(tokenMap.values()).sort(
+        (a, b) =>
+          new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
+      );
     };
-    const formatDate = (date: string) => new Date(date).toLocaleString("en-US");
 
-    const emitTokenClick = (token: string) => {
-      emit("token-click", token);
+    const formatDatePST = (date: string) => {
+      const options = {
+        timeZone: "America/Los_Angeles",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      };
+
+      return new Intl.DateTimeFormat("en-US", options).format(new Date(date));
     };
 
     const refreshData = (data: any[]) => {
-      fetchedData.value = data;
+      latestTokenPrices.value = data;
     };
 
     const convertToSol = (usdPrice: number) => {
       if (solPrice.value === null) return 0;
+
       return usdPrice / solPrice.value;
+    };
+
+    const openDialog = (event: any) => {
+      const item = event.item;
+      if (item && item.token) {
+        selectedToken.value = item.token;
+      } else {
+        selectedToken.value = "Unknown Token";
+      }
+      isDialogOpen.value = true;
+    };
+
+    const closeDialog = () => {
+      isDialogOpen.value = false;
+    };
+
+    const addTokenToSelection = (token: string) => {
+      emit("token-click", token);
     };
 
     return {
       currentPage,
-      totalPages,
+      itemsPerPage,
       uniqueTokens,
-      formatDate,
-      emitTokenClick,
+      formatDatePST,
       refreshData,
       convertToSol,
-      fetchedData,
+      openDialog,
+      closeDialog,
+      addTokenToSelection,
+      latestTokenPrices,
+      headers,
+      isDialogOpen,
+      selectedToken,
     };
   },
 });
@@ -127,22 +188,6 @@ export default defineComponent({
 <style scoped>
 .latest-token-prices-table {
   margin-top: 20px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: 8px;
-  border: 1px solid #ccc;
-  text-align: left;
-}
-
-tbody tr {
-  cursor: pointer;
 }
 
 .pagination {

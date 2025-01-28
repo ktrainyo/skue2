@@ -3,75 +3,105 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref } from "vue";
-import { createChart, IChartApi, CandlestickData } from "lightweight-charts";
-import { fetchOHLCData } from "./api"; // Import the function to fetch OHLC data
+import { defineComponent, ref, watch, onMounted, onUnmounted } from "vue";
+import {
+  createChart,
+  IChartApi,
+  ISeriesApi,
+  BarData,
+} from "lightweight-charts";
+import { useSupabase } from "@/composables/useSupabase";
 
 export default defineComponent({
   name: "CandlestickChart",
-  setup() {
+  props: {
+    token: {
+      type: String,
+      required: true,
+    },
+    interval: {
+      type: String,
+      default: "3600", // Default to hourly data
+    },
+    timeFrom: {
+      type: Number,
+      required: true,
+    },
+    timeTo: {
+      type: Number,
+      required: true,
+    },
+  },
+  setup(props) {
     const chartContainer = ref<HTMLDivElement | null>(null);
     let chart: IChartApi | null = null;
+    let candlestickSeries: ISeriesApi<"Candlestick"> | null = null;
+    const supabase = useSupabase();
 
-    const renderChart = async () => {
-      if (!chartContainer.value) return;
+    const fetchData = async () => {
+      const { data, error } = await supabase.rpc("get_ohlc_data", {
+        token_name: props.token,
+        start_time: props.timeFrom,
+        end_time: props.timeTo,
+        interval_seconds: parseInt(props.interval),
+      });
 
-      // Fetch OHLC data for Xtoken
-      const token = "Xtoken";
-      const interval = 60; // 1-minute interval
-      const startTime = 0; // All-time start
-      const endTime = null; // Current time
-
-      const ohlcData = await fetchOHLCData(token, interval, startTime, endTime);
-
-      if (!ohlcData) return;
-
-      // Transform data into Lightweight Charts format for candlesticks
-      const candlestickData: CandlestickData[] = ohlcData.map((row: any) => ({
-        time: new Date(row.period_start).getTime() / 1000, // Convert to Unix timestamp
-        open: row.open,
-        high: row.high,
-        low: row.low,
-        close: row.close,
-      }));
-
-      // Create or reset the chart
-      if (chart) {
-        chart.remove(); // Remove the previous chart if it exists
+      if (error) {
+        console.error("Error fetching OHLC data:", error.message);
+        return;
       }
-      chart = createChart(chartContainer.value, {
-        width: chartContainer.value.clientWidth,
-        height: 400,
-        layout: { backgroundColor: "#ffffff", textColor: "#000000" },
-        grid: {
-          vertLines: { color: "#eeeeee" },
-          horzLines: { color: "#eeeeee" },
-        },
-      });
 
-      // Add a candlestick series
-      const candlestickSeries = chart.addCandlestickSeries({
-        upColor: "#26a69a",
-        downColor: "#ef5350",
-        borderVisible: false,
-        wickUpColor: "#26a69a",
-        wickDownColor: "#ef5350",
-      });
+      if (data) {
+        const chartData: BarData[] = data.map((item: any) => ({
+          time: new Date(item.period_start).getTime() / 1000,
+          open: item.open,
+          high: item.high,
+          low: item.low,
+          close: item.close,
+        }));
 
-      // Set the candlestick data
-      candlestickSeries.setData(candlestickData);
+        if (candlestickSeries) {
+          candlestickSeries.setData(chartData);
+        }
+      }
     };
 
     onMounted(() => {
-      renderChart();
+      if (chartContainer.value) {
+        chart = createChart(chartContainer.value, {
+          width: chartContainer.value.clientWidth,
+          height: chartContainer.value.clientHeight,
+        });
+
+        candlestickSeries = chart.addCandlestickSeries();
+        fetchData();
+      }
     });
 
-    return { chartContainer };
+    onUnmounted(() => {
+      if (chart) {
+        chart.remove();
+      }
+    });
+
+    watch(
+      [
+        () => props.token,
+        () => props.interval,
+        () => props.timeFrom,
+        () => props.timeTo,
+      ],
+      fetchData
+    );
+
+    return {
+      chartContainer,
+    };
   },
 });
 </script>
 
-<style>
+<style scoped>
 .chart-container {
   width: 100%;
   height: 400px;

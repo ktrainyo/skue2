@@ -74,6 +74,7 @@ declare module 'vue' {
     TiptapEditor: typeof import('./src/@core/components/TiptapEditor.vue')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
     TokenDetails: typeof import('./src/components/Token/TokenDetails.vue')['default']
+    TokenDialog: typeof import('./src/components/tables/TokenDialog.vue')['default']
     TokenForm: typeof import('./src/components/Token/TokenForm.vue')['default']
     TokenSearch: typeof import('./src/components/Token/TokenSearch.vue')['default']
     TokenStats: typeof import('./src/components/Token/TokenStats.vue')['default']

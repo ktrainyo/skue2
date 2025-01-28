@@ -55,6 +55,15 @@
 
     <!-- Latest Token Prices Table -->
     <latest-token-prices-table @token-click="addTokenFromTable" />
+
+    <!-- Candlestick Chart -->
+    <candlestick-chart
+      v-if="selectedTokensArray.length === 1"
+      :token="selectedTokensArray[0]"
+      :interval="chartInterval"
+      :timeFrom="timeFrom"
+      :timeTo="timeTo"
+    />
   </div>
 </template>
 
@@ -63,6 +72,7 @@ import { defineComponent, ref, computed } from "vue";
 import LatestTokenPricesTable from "@/components/tables/latestTokenPricesTable.vue";
 import GetLatestTokens from "@/components/Token/getLatestTokens.vue";
 import ChartDataOptions from "@/components/ChartDataOptions.vue";
+import CandlestickChart from "@/components/charts/candlestickChart.vue";
 import { getSingleTokenPrice } from "@/components/services/middleware/getSingleTokenPrice";
 import { getMultiTokenPrices } from "@/components/services/middleware/getMultiTokenPrices";
 import { getTokenData } from "@/components/services/middleware/getTokenData";
@@ -75,10 +85,14 @@ export default defineComponent({
     LatestTokenPricesTable,
     GetLatestTokens,
     ChartDataOptions,
+    CandlestickChart,
   },
   setup() {
     const tokensInput = ref("");
     const selectedTokens = ref("");
+    const chartInterval = ref("3600"); // Default to hourly data
+    const timeFrom = ref(Math.floor(Date.now() / 1000) - 7 * 24 * 3600); // Default to last 7 days
+    const timeTo = ref(Math.floor(Date.now() / 1000)); // Current time
 
     const selectedTokensArray = computed(() =>
       selectedTokens.value.split(",").filter((token) => token.trim() !== "")
@@ -195,6 +209,9 @@ export default defineComponent({
       tokensInput,
       selectedTokens,
       selectedTokensArray,
+      chartInterval,
+      timeFrom,
+      timeTo,
       addToken,
       addTokenFromTable,
       removeToken,
