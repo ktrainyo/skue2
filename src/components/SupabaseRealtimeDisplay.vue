@@ -5,19 +5,20 @@
 </template>
 
 <script lang="ts">
-import { useSupabase } from '@/composables/useSupabase';
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useSupabase } from "@/composables/useSupabase";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { defineComponent, onBeforeUnmount, onMounted, ref } from "vue";
 
 export default defineComponent({
-  name: 'SupabaseRealtimeDisplay',
+  name: "SupabaseRealtimeDisplay",
   props: {
     tableName: {
       type: String,
       required: true,
     },
   },
-  setup(props) {
+  emits: ["data-updated"],
+  setup(props, { emit }) {
     const supabase = useSupabase();
     const fetchedData = ref<any[]>([]);
     const channelRef = ref<any>(null);
@@ -34,14 +35,13 @@ export default defineComponent({
     });
 
     const loadInitialData = async () => {
-      const { data, error } = await supabase
-        .from(props.tableName)
-        .select('*');
+      const { data, error } = await supabase.from(props.tableName).select("*");
 
       if (error) {
-        console.error('Error fetching initial data:', error.message);
+        console.error("Error fetching initial data:", error.message);
       } else {
         fetchedData.value = data ?? [];
+        emit("data-updated", fetchedData.value);
       }
     };
 
@@ -50,35 +50,44 @@ export default defineComponent({
 
       channelRef.value
         .on(
-          'postgres_changes',
+          "postgres_changes",
           {
-            event: '*',
-            schema: 'public',
+            event: "*",
+            schema: "public",
             table: props.tableName,
           },
-          (payload: RealtimePostgresChangesPayload<any>) => handleRealtimeChanges(payload)
+          (payload: RealtimePostgresChangesPayload<any>) =>
+            handleRealtimeChanges(payload)
         )
         .subscribe();
     };
 
-    const handleRealtimeChanges = (payload: RealtimePostgresChangesPayload<any>) => {
+    const handleRealtimeChanges = (
+      payload: RealtimePostgresChangesPayload<any>
+    ) => {
+      console.log("Realtime payload:", payload); // Add this line
       switch (payload.eventType) {
-        case 'INSERT':
+        case "INSERT":
           fetchedData.value.push(payload.new);
           break;
 
-        case 'UPDATE': {
-          const idx = fetchedData.value.findIndex(item => item.id === payload.old.id);
+        case "UPDATE": {
+          const idx = fetchedData.value.findIndex(
+            (item) => item.id === payload.old.id
+          );
           if (idx !== -1) {
             fetchedData.value[idx] = payload.new;
           }
           break;
         }
 
-        case 'DELETE':
-          fetchedData.value = fetchedData.value.filter(item => item.id !== payload.old.id);
+        case "DELETE":
+          fetchedData.value = fetchedData.value.filter(
+            (item) => item.id !== payload.old.id
+          );
           break;
       }
+      emit("data-updated", fetchedData.value);
     };
 
     return {
@@ -90,6 +99,8 @@ export default defineComponent({
 
 <style scoped>
 .supabase-realtime-display {
-  /* Your styling here */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 </style>

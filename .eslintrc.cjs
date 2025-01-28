@@ -4,17 +4,9 @@ module.exports = {
     es2021: true,
   },
   extends: [
-    '@antfu/eslint-config-vue',
     'plugin:vue/vue3-recommended',
-    'plugin:import/recommended',
-    'plugin:import/typescript',
-    'plugin:promise/recommended',
-    'plugin:sonarjs/recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:case-police/recommended',
-    'plugin:regexp/recommended',
-
-    // 'plugin:unicorn/recommended',
+    'prettier',
   ],
   parser: 'vue-eslint-parser',
   parserOptions: {
@@ -25,8 +17,7 @@ module.exports = {
   plugins: [
     'vue',
     '@typescript-eslint',
-    'regex',
-    'regexp',
+    'prettier',
   ],
   ignorePatterns: ['src/plugins/iconify/*.js', 'node_modules', 'dist', '*.d.ts', 'vendor', '*.json'],
   rules: {
@@ -228,6 +219,7 @@ module.exports = {
       // Ignore files
       '\.eslintrc\.cjs',
     ],
+    'prettier/prettier': 'error',
   },
   settings: {
     'import/resolver': {

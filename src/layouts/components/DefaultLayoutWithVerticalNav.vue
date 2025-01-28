@@ -1,15 +1,18 @@
 <script lang="ts" setup>
-import navItems from '@/navigation/vertical'
-import { themeConfig } from '@themeConfig'
+import navItems from "@/navigation/vertical";
+import { themeConfig } from "@themeConfig";
 
 // Components
-import Footer from '@/layouts/components/Footer.vue'
-import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
-import UserProfile from '@/layouts/components/UserProfile.vue'
-import NavBarI18n from '@core/components/I18n.vue'
+import Footer from "@/layouts/components/Footer.vue";
+import NavbarThemeSwitcher from "@/layouts/components/NavbarThemeSwitcher.vue";
+import UserProfile from "@/layouts/components/UserProfile.vue";
+import NavBarI18n from "@core/components/I18n.vue";
+
+// Custom SOL/USD Ticker Component
+import SolUsdTicker from "@/components/data-fetchers/SolUsdTicker.vue";
 
 // @layouts plugin
-import { VerticalNavLayout } from '@layouts'
+import { VerticalNavLayout } from "@layouts";
 </script>
 
 <template>
@@ -22,18 +25,23 @@ import { VerticalNavLayout } from '@layouts'
           class="ms-n3 d-lg-none"
           @click="toggleVerticalOverlayNavActive(true)"
         >
-          <VIcon
-            size="26"
-            icon="tabler-menu-2"
-          />
+          <VIcon size="26" icon="tabler-menu-2" />
         </IconBtn>
 
+        <!-- Theme Switcher -->
         <NavbarThemeSwitcher />
+
+        <!-- SOL/USD Ticker -->
+        <SolUsdTicker />
 
         <VSpacer />
 
+        <!-- Internationalization -->
         <NavBarI18n
-          v-if="themeConfig.app.i18n.enable && themeConfig.app.i18n.langConfig?.length"
+          v-if="
+            themeConfig.app.i18n.enable &&
+            themeConfig.app.i18n.langConfig?.length
+          "
           :languages="themeConfig.app.i18n.langConfig"
         />
         <UserProfile />

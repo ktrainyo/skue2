@@ -3,17 +3,17 @@
   "files.insertFinalNewline": true,
   "javascript.updateImportsOnFileMove.enabled": "always",
   "[javascript]": {
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescript]": {
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.autoClosingBrackets": "always"
   },
   "[markdown]": {
-    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[scss]": {
-    "editor.defaultFormatter": "stylelint.vscode-stylelint"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
@@ -22,38 +22,99 @@
     "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[vue]": {
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "volar.preview.port": 3000,
-  "volar.completion.preferredTagNameCase": "pascal",
-  "eslint.options": {},
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.fixAll.stylelint": "explicit",
-    "source.organizeImports": "explicit"
-  },
-  "eslint.alwaysShowStatus": true,
-  "eslint.format.enable": true,
-  "eslint.packageManager": "pnpm",
-  "stylelint.packageManager": "pnpm",
-  "stylelint.validate": [
-    "css",
-    "scss",
+  "settingsSync.ignoredExtensions": [
+    "supabase.vscode-supabase-extension"
+  ],
+  "geminicodeassist.languages": [
+    "typescript",
     "vue"
   ],
+  "geminicodeassist.inlineSuggestions.enableAuto": false,
+  "geminicodeassist.updateChannel": "Insiders",
+  "geminicodeassist.codeGenerationPaneViewEnabled": true,
+  "github.copilot.enable": {
+    "vue 3": true,
+    "typescript": true
+  },
+  "eslint.probe": [
+    "javascript",
+    "typescript",
+    "vue",
+    "json",
+    "jsonc"
+  ],
+  "github.copilot.chat.codeGeneration.useInstructionFiles": false,
+  "github.copilot.chat.followUps": "always",
+  "github.copilot.chat.reviewSelection.instructions": [],
+  "github.copilot.chat.edits.suggestRelatedFilesFromGitHistory": false,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "volar.formatting.enable": true,
+  "volar.formatting.useWorkspaceDependencies": true,
+  "volar.formatting.scriptInitialIndent": true,
+  "volar.formatting.styleInitialIndent": true,
+  "geminicodeassist.project": "caaegis",
+  "git.openRepositoryInParentFolders": "never",
+  "middlewareInstructions": {
+    "summary": "The front-end communicates with the Skolabase middleware exclusively through defined APIs. The middleware handles all database operations (insert, update, fetch). Avoid accessing or modifying the Supabase database directly on the front end.",
+    "usageRules": [
+      {
+        "api": "/first-buyers/{token}",
+        "method": "GET",
+        "description": "Fetches the first 100 buyers of a token. Ensure the token isn't already stored in the database before calling this endpoint.",
+        "parameters": {
+          "required": [
+            "token"
+          ],
+          "optional": []
+        },
+        "exampleCall": "http://192.168.50.226:8082/first-buyers/0x123456"
+      },
+      {
+        "api": "/tokens/latest",
+        "method": "GET",
+        "description": "Fetches the latest 100 tokens. Use the 'page' query parameter to paginate results.",
+        "parameters": {
+          "required": [],
+          "optional": [
+            "page"
+          ]
+        },
+        "exampleCall": "http://192.168.50.226:8082/tokens/latest?page=1"
+      },
+      {
+        "api": "/price/multi",
+        "method": "GET",
+        "description": "Fetches price and related data for multiple tokens in a single call.",
+        "parameters": {
+          "required": [
+            "tokens"
+          ],
+          "optional": []
+        },
+        "exampleCall": "http://192.168.50.226:8082/price/multi?tokens=0x123456,0x789abc"
+      },
+      {
+        "api": "/chart/{token}",
+        "method": "GET",
+        "description": "Retrieves OCLHV chart data for a token. Supports dynamic time intervals and date ranges.",
+        "parameters": {
+          "required": [
+            "token"
+          ],
+          "optional": []
+        }
+      }
+    ]
+  },
   "cSpell.words": [
-    "addressline",
     "Composables",
     "Customizer",
-    "destr",
-    "flagpack",
     "Iconify",
     "nuxt",
     "ofetch",
-    "psudo",
     "stylelint",
-    "touchless",
-    "triggerer",
     "vuetify"
   ],
   "commentAnchors.tags.anchors": {
