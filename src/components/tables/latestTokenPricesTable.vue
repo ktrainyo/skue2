@@ -12,7 +12,10 @@
           density="compact"
           :items-per-page="itemsPerPage"
           :page.sync="currentPage"
-          @click:row="openDialog"
+          item-value="token"
+          show-select
+          :model-value="selectedTokens"
+          @update:modelValue="updateSelectedTokens"
         >
           <template #header.token>
             <strong>Token Addrs</strong>
@@ -33,7 +36,7 @@
             <strong>Updated On</strong>
           </template>
           <template #header.priceQuote>
-            <strong>pRICEqUOTE</strong>
+            <strong>Price Quote</strong>
           </template>
           <!-- Custom rendering for Price USD -->
           <template #item.price="{ item }">
@@ -59,39 +62,34 @@
             <span v-html="$formatPrice(item.priceQuote ?? 0)"></span>
           </template>
         </v-data-table>
-        <TokenDialog
-          :token="selectedToken"
-          :isDialogOpen="isDialogOpen"
-          @add-token="addTokenToSelection"
-          @close-dialog="closeDialog"
-        />
       </template>
     </SupabaseRealtimeDisplay>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, PropType } from "vue";
 import SupabaseRealtimeDisplay from "@/components/SupabaseRealtimeDisplay.vue";
 import { solPrice } from "@/components/data-fetchers/SolUsdTicker.vue";
 import { VDataTable } from "vuetify/components";
-import TokenDialog from "@/components/tables/TokenDialog.vue";
-import { makeVFieldProps } from "vuetify/lib/components/VField/VField";
-import { paginationMeta } from "../../utils/paginationMeta";
 
 export default defineComponent({
   name: "LatestTokenPricesTable",
   components: {
     SupabaseRealtimeDisplay,
     VDataTable,
-    TokenDialog,
   },
-  setup(_, { emit }) {
+  props: {
+    selectedTokens: {
+      type: Array as PropType<string[]>,
+      required: true,
+    },
+  },
+  emits: ["update:selectedTokens"],
+  setup(props, { emit }) {
     const currentPage = ref(1);
     const itemsPerPage = 10;
     const latestTokenPrices = ref<any[]>([]);
-    const isDialogOpen = ref(false);
-    const selectedToken = ref("");
 
     const headers = [
       { text: "Token", value: "token" },
@@ -148,22 +146,25 @@ export default defineComponent({
       return usdPrice / solPrice.value;
     };
 
-    const openDialog = (event: any) => {
-      const item = event.item;
-      if (item && item.token) {
-        selectedToken.value = item.token;
-      } else {
-        selectedToken.value = "Unknown Token";
+    const updateSelectedTokens = (tokens: any[]) => {
+      console.log("Selected tokens:", tokens); // Debugging line
+      if (!Array.isArray(tokens)) {
+        console.error("Expected an array of tokens, but got:", tokens);
+        return;
       }
-      isDialogOpen.value = true;
-    };
-
-    const closeDialog = () => {
-      isDialogOpen.value = false;
-    };
-
-    const addTokenToSelection = (token: string) => {
-      emit("token-click", token);
+      const tokenAddresses = tokens
+        .map((token) => {
+          if (typeof token === "string") {
+            return token; // Handle case where token is a string
+          }
+          if (!token || !token.token) {
+            console.error("Invalid token structure:", token);
+            return null;
+          }
+          return token.token;
+        })
+        .filter(Boolean); // Filter out null values
+      emit("update:selectedTokens", tokenAddresses);
     };
 
     return {
@@ -173,13 +174,9 @@ export default defineComponent({
       formatDatePST,
       refreshData,
       convertToSol,
-      openDialog,
-      closeDialog,
-      addTokenToSelection,
       latestTokenPrices,
       headers,
-      isDialogOpen,
-      selectedToken,
+      updateSelectedTokens,
     };
   },
 });

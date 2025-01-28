@@ -21,7 +21,7 @@
       </div>
       <div class="selected-tokens">
         <div
-          v-for="token in selectedTokensArray"
+          v-for="token in selectedTokens"
           :key="token"
           class="token-item"
           @click="removeToken(token)"
@@ -44,35 +44,21 @@
       <v-btn rounded @click="callFirstBuyers">Get First Buyers</v-btn>
     </div>
 
-    <!-- Chart Data Options -->
-    <chart-data-options
-      v-if="selectedTokensArray.length === 1"
-      :token="selectedTokensArray[0]"
-    />
-
     <!-- Get Latest Tokens Button -->
     <get-latest-tokens />
 
     <!-- Latest Token Prices Table -->
-    <latest-token-prices-table @token-click="addTokenFromTable" />
-
-    <!-- Candlestick Chart -->
-    <candlestick-chart
-      v-if="selectedTokensArray.length === 1"
-      :token="selectedTokensArray[0]"
-      :interval="chartInterval"
-      :timeFrom="timeFrom"
-      :timeTo="timeTo"
+    <latest-token-prices-table
+      :selectedTokens="selectedTokens"
+      @update:selectedTokens="updateSelectedTokens"
     />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from "vue";
+import { defineComponent, ref } from "vue";
 import LatestTokenPricesTable from "@/components/tables/latestTokenPricesTable.vue";
 import GetLatestTokens from "@/components/Token/getLatestTokens.vue";
-import ChartDataOptions from "@/components/ChartDataOptions.vue";
-import CandlestickChart from "@/components/charts/candlestickChart.vue";
 import { getSingleTokenPrice } from "@/components/services/middleware/getSingleTokenPrice";
 import { getMultiTokenPrices } from "@/components/services/middleware/getMultiTokenPrices";
 import { getTokenData } from "@/components/services/middleware/getTokenData";
@@ -84,46 +70,29 @@ export default defineComponent({
   components: {
     LatestTokenPricesTable,
     GetLatestTokens,
-    ChartDataOptions,
-    CandlestickChart,
   },
   setup() {
     const tokensInput = ref("");
-    const selectedTokens = ref("");
-    const chartInterval = ref("3600"); // Default to hourly data
-    const timeFrom = ref(Math.floor(Date.now() / 1000) - 7 * 24 * 3600); // Default to last 7 days
-    const timeTo = ref(Math.floor(Date.now() / 1000)); // Current time
-
-    const selectedTokensArray = computed(() =>
-      selectedTokens.value.split(",").filter((token) => token.trim() !== "")
-    );
+    const selectedTokens = ref<string[]>([]);
 
     const addToken = () => {
       const token = tokensInput.value.trim();
       if (token && !selectedTokens.value.includes(token)) {
-        selectedTokens.value += (selectedTokens.value ? "," : "") + token;
+        selectedTokens.value.push(token);
         tokensInput.value = "";
       }
     };
 
-    const addTokenFromTable = (token: string) => {
-      if (!selectedTokens.value.includes(token)) {
-        selectedTokens.value += (selectedTokens.value ? "," : "") + token;
-      }
-    };
-
     const removeToken = (token: string) => {
-      selectedTokens.value = selectedTokensArray.value
-        .filter((t) => t !== token)
-        .join(",");
+      selectedTokens.value = selectedTokens.value.filter((t) => t !== token);
     };
 
     const clearTokens = () => {
-      selectedTokens.value = "";
+      selectedTokens.value = [];
     };
 
     const callSingleTokenPrice = async () => {
-      const tokens = selectedTokensArray.value;
+      const tokens = selectedTokens.value;
       if (tokens.length !== 1) {
         console.error(
           "The Fetch Single Token Price button will only work with one token selected."
@@ -140,7 +109,7 @@ export default defineComponent({
     };
 
     const callTokenData = async () => {
-      const tokens = selectedTokensArray.value;
+      const tokens = selectedTokens.value;
       if (tokens.length !== 1) {
         console.error(
           "The Fetch Token Data button will only work with one token selected."
@@ -157,7 +126,7 @@ export default defineComponent({
     };
 
     const callMultiTokenPrices = async () => {
-      const tokens = selectedTokensArray.value;
+      const tokens = selectedTokens.value;
       if (tokens.length === 0) {
         console.error("No tokens selected.");
         return;
@@ -172,7 +141,7 @@ export default defineComponent({
     };
 
     const callTokenTrades = async () => {
-      const tokens = selectedTokensArray.value;
+      const tokens = selectedTokens.value;
       if (tokens.length !== 1) {
         console.error(
           "The Fetch Token Trades button will only work with one token selected."
@@ -189,7 +158,7 @@ export default defineComponent({
     };
 
     const callFirstBuyers = async () => {
-      const tokens = selectedTokensArray.value;
+      const tokens = selectedTokens.value;
       if (tokens.length !== 1) {
         console.error(
           "The Get First Buyers button will only work with one token selected."
@@ -205,15 +174,14 @@ export default defineComponent({
       }
     };
 
+    const updateSelectedTokens = (tokens: string[]) => {
+      selectedTokens.value = tokens;
+    };
+
     return {
       tokensInput,
       selectedTokens,
-      selectedTokensArray,
-      chartInterval,
-      timeFrom,
-      timeTo,
       addToken,
-      addTokenFromTable,
       removeToken,
       clearTokens,
       callSingleTokenPrice,
@@ -221,6 +189,7 @@ export default defineComponent({
       callMultiTokenPrices,
       callTokenTrades,
       callFirstBuyers,
+      updateSelectedTokens,
     };
   },
 });
